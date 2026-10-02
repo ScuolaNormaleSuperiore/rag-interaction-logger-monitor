@@ -19,13 +19,11 @@
 
 	<rule ref="WordPress"/>
 
-	<!-- Classes live in includes/ following PSR-4 (RILM\ namespace), not the class-*.php convention. -->
+	<!-- Classes follow the WordPress convention: class-name.php holding class Name_With_Underscores. -->
 	<rule ref="WordPress.Files.FileName">
 		<properties>
 			<property name="is_theme" value="false"/>
 		</properties>
-		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
-		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
 	</rule>
 
 	<rule ref="WordPress.WP.I18n">

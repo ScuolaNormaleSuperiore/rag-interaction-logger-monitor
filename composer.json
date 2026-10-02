@@ -15,11 +15,6 @@
 		"wp-coding-standards/wpcs": "^3.1",
 		"yoast/phpunit-polyfills": "^4.0"
 	},
-	"autoload": {
-		"psr-4": {
-			"RILM\\": "includes/"
-		}
-	},
 	"autoload-dev": {
 		"psr-4": {
 			"RILM\\Tests\\": "tests/"
