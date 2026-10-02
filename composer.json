@@ -1,0 +1,44 @@
+{
+	"name": "ict-sns/rag-interaction-logger-monitor",
+	"description": "Administrator-only WordPress monitor for RAG Interaction Logger data.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=8.3"
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpcompatibility/php-compatibility": "^9.3",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"phpunit/phpunit": "^9.6",
+		"squizlabs/php_codesniffer": "^3.10",
+		"wp-coding-standards/wpcs": "^3.1",
+		"yoast/phpunit-polyfills": "^4.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"RILM\\": "includes/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"RILM\\Tests\\": "tests/"
+		}
+	},
+	"scripts": {
+		"lint": "phpcs --standard=phpcs.xml.dist",
+		"lint:php": "@lint",
+		"test:unit": "phpunit --configuration phpunit.xml",
+		"test:integration": "phpunit --configuration phpunit-integration.xml",
+		"test:all": [
+			"@test:unit",
+			"@test:integration"
+		]
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		},
+		"sort-packages": true
+	}
+}

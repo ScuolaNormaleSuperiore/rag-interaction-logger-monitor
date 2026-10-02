@@ -46,3 +46,34 @@ wp-config.php
 # Note: If you wish to whitelist themes,
 # uncomment the next line
 #/wp-content/themes
+
+# Node
+node_modules
+
+# Composer
+/vendor/
+composer.lock
+.composer-cache/
+.composer-home/
+
+# Tests
+.phpunit.result.cache
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Custom directives
+.codex-tmp
+.claude
+.codex
+DEV
+AGENTS
+AGENTS.md
+CLAUDE.md
+tmp-alm-php-path-test.out
+tmp-alm-php-path-test.php
+tmp/
+.agents
+skills-lock.json

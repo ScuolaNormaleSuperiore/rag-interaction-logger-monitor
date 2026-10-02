@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Plugin Coding Standards">
+	<description>PHPCS ruleset for the RAG Interaction Logger Monitor WordPress plugin.</description>
+
+	<arg value="ps"/>
+	<arg name="parallel" value="8"/>
+	<arg name="extensions" value="php"/>
+
+	<file>rag-interaction-logger-monitor.php</file>
+	<file>includes</file>
+
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/build/*</exclude-pattern>
+	<exclude-pattern>*/dist/*</exclude-pattern>
+	<exclude-pattern>*/DEV/*</exclude-pattern>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+	<exclude-pattern>*/languages/*</exclude-pattern>
+
+	<rule ref="WordPress"/>
+
+	<!-- Classes live in includes/ following PSR-4 (RILM\ namespace), not the class-*.php convention. -->
+	<rule ref="WordPress.Files.FileName">
+		<properties>
+			<property name="is_theme" value="false"/>
+		</properties>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+	</rule>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="rag-interaction-logger-monitor"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="rilm_"/>
+				<element value="RILM_"/>
+				<element value="RILM"/>
+			</property>
+		</properties>
+	</rule>
+
+	<config name="minimum_supported_wp_version" value="7.1"/>
+	<config name="testVersion" value="8.3-"/>
+</ruleset>

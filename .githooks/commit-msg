@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Enforce the project commit-message rules from DEV/AGENTS/GIT_WORKFLOW.md.
+set -euo pipefail
+
+message_file="$1"
+subject="$(grep -vE '^(#|[[:space:]]*$)' "$message_file" | head -n 1 || true)"
+
+if [ -z "$subject" ]; then
+	echo "[RILM commit-msg] Commit subject is required." >&2
+	exit 1
+fi
+
+if [ "${#subject}" -gt 72 ]; then
+	echo "[RILM commit-msg] Commit subject must be 72 characters or fewer." >&2
+	exit 1
+fi
+
+if grep -Eqi '^Co-authored-by:[[:space:]]*(Claude|Codex|ChatGPT|OpenAI)' "$message_file"; then
+	echo "[RILM commit-msg] AI co-author trailers are not allowed for this project." >&2
+	exit 1
+fi

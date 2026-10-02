@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Run fast, local checks on staged changes before a commit.
+set -euo pipefail
+
+if [ -d "$HOME/.local/bin" ]; then
+	export PATH="$HOME/.local/bin:$PATH"
+fi
+
+repo_root="$(git rev-parse --show-toplevel)"
+"$repo_root/.githooks/check-staged-secrets.sh"
+"$repo_root/.githooks/check-staged-l10n.sh"
+
+php_binary="${PHP_BINARY:-}"
+if [ -z "$php_binary" ]; then
+	php_binary="$(command -v php || true)"
+fi
+
+staged_php="$(git diff --cached --name-only --diff-filter=ACMR | grep '\.php$' || true)"
+if [ -n "$staged_php" ]; then
+	if [ -z "$php_binary" ]; then
+		echo "[RILM pre-commit] PHP is unavailable; staged PHP syntax was not checked." >&2
+		echo "[RILM pre-commit] Set PHP_BINARY or make php available before committing PHP changes." >&2
+	else
+		echo "[RILM pre-commit] Linting staged PHP files..." >&2
+		while IFS= read -r file; do
+			"$php_binary" -l "$repo_root/$file"
+		done <<< "$staged_php"
+	fi
+fi
+
+if [ ! -f "$repo_root/composer.json" ]; then
+	exit 0
+fi
+
+if [ ! -x "$repo_root/vendor/bin/phpcs" ] || [ ! -x "$repo_root/vendor/bin/phpunit" ]; then
+	echo "[RILM pre-commit] Composer development dependencies are unavailable; PHPCS and unit tests were not run." >&2
+	echo "[RILM pre-commit] Run composer install to enable the full quality gate." >&2
+	exit 0
+fi
+
+if ! command -v composer >/dev/null 2>&1 || ! command -v php >/dev/null 2>&1; then
+	echo "[RILM pre-commit] Composer or php is unavailable in PATH; PHPCS and unit tests were not run." >&2
+	echo "[RILM pre-commit] Make both commands available in PATH to enable the full quality gate." >&2
+	exit 0
+fi
+
+echo "[RILM pre-commit] Running WordPress Coding Standards..." >&2
+composer --working-dir="$repo_root" lint
+
+echo "[RILM pre-commit] Running unit tests..." >&2
+composer --working-dir="$repo_root" test:unit
