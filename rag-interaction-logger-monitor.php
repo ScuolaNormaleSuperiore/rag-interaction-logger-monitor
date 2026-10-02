@@ -15,3 +15,20 @@
  *
  * @package RagInteractionLoggerMonitor
  */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+define( 'RILM_VERSION', '0.1.0' );
+define( 'RILM_PLUGIN_FILE', __FILE__ );
+define( 'RILM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+
+require_once RILM_PLUGIN_DIR . 'includes/class-autoloader.php';
+
+( new \RILM\Autoloader( RILM_PLUGIN_DIR . 'includes' ) )->register();
+
+// The plugin has no frontend output: its hooks are only needed in the administration area.
+if ( is_admin() ) {
+	( new \RILM\Plugin() )->init();
+}

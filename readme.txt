@@ -14,13 +14,14 @@ Administrator-only monitor for RAG Interaction Logger data.
 
 RAG Interaction Logger Monitor lets WordPress administrators inspect and analyse interaction logs from an external MySQL or MariaDB source.
 
-The plugin has no frontend output, public REST API, shortcode, block, or settings page. Its external database connection is configured through constants in `wp-config.php`.
+The plugin has no frontend output, public REST API, shortcode, or block. The external database host, port, database and table are set on the plugin Settings page; the database user and password are defined only as constants in `wp-config.php`.
 
 == Installation ==
 
 1. Upload the plugin files to the `/wp-content/plugins/rag-interaction-logger-monitor` directory, or install the plugin through the WordPress plugins screen.
 2. Activate the plugin through the Plugins screen in WordPress.
-3. Define the required external database constants in `wp-config.php`.
+3. Define `ICT_RAG_MONITOR_DB_USER` and `ICT_RAG_MONITOR_DB_PASSWORD` in `wp-config.php`.
+4. Set the database host, port, database and table under Monitor RAG > Settings.
 
 == Changelog ==
 

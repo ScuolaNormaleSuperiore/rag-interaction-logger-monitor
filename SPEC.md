@@ -41,14 +41,15 @@ Question, llm_answer, delivered e user_id possono contenere dati personali; i co
 - Ogni pagina richiede manage_options. Non esistono pagine pubbliche né REST API pubbliche.
 - Ogni form richiede capability e nonce WordPress.
 - Il DB usa un utente distinto dal logger, con solo SELECT sulla tabella configurata (default rag-interaction-logger-db.ril_interactions). Non sono ammessi INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, GRANT o altri privilegi di amministrazione.
-- Host, porta, database, tabella, utente e password sono costanti di wp-config.php, non opzioni WordPress.
+- Utente e password del database sono costanti di wp-config.php, mai opzioni WordPress e mai visibili nella UI. Host, porta, database e tabella sono impostabili dalla pagina Impostazioni e salvati in un'unica opzione WordPress (`rilm_settings`); se la costante corrispondente è definita in wp-config.php, la costante ha la precedenza e il campo è mostrato in sola lettura.
+- La pagina Impostazioni richiede manage_options, usa la Settings API di WordPress (nonce incluso) e non mostra mai utente né password.
 - La password non appare mai in HTML, log, diagnostica o errori. Gli errori admin sono generici e non espongono query, credenziali, testi delle interazioni o dettagli del driver.
 - Il monitor usa le stesse impostazioni TLS e l'infrastruttura della connessione database del sito WordPress; non introduce una configurazione TLS propria.
 - Il monitor apre una seconda connessione `wpdb`, distinta da quella del sito. Una piccola sottoclasse interna evita che un DB dei log non raggiungibile termini la richiesta: nell'admin appare un avviso sicuro e il sito continua a funzionare.
 
-Costanti proposte: ICT_RAG_MONITOR_DB_HOST, ICT_RAG_MONITOR_DB_PORT, ICT_RAG_MONITOR_DB_NAME, ICT_RAG_MONITOR_DB_TABLE, ICT_RAG_MONITOR_DB_USER e ICT_RAG_MONITOR_DB_PASSWORD.
+Costanti: ICT_RAG_MONITOR_DB_USER e ICT_RAG_MONITOR_DB_PASSWORD sono obbligatorie e solo da wp-config.php. ICT_RAG_MONITOR_DB_HOST, ICT_RAG_MONITOR_DB_PORT, ICT_RAG_MONITOR_DB_NAME e ICT_RAG_MONITOR_DB_TABLE sono facoltative: se definite sostituiscono il valore delle Impostazioni.
 
-Valori di default: se ICT_RAG_MONITOR_DB_NAME non è definita si usa `rag-interaction-logger-db`; se ICT_RAG_MONITOR_DB_TABLE non è definita si usa `ril_interactions`. Il nome della tabella è un identificatore SQL, non un valore preparabile: va validato con una whitelist (solo lettere, numeri e underscore) e quotato con backtick; un valore non valido produce un avviso admin generico, senza query.
+Valori di default: porta `3306`, database `rag-interaction-logger-db`, tabella `ril_interactions`; l'host non ha default e deve venire da costante o Impostazioni. Il nome della tabella è un identificatore SQL, non un valore preparabile: va validato con una whitelist (solo lettere, numeri e underscore) e quotato con backtick; un valore non valido produce un avviso admin generico, senza query.
 
 ## Funzionalità v1
 
@@ -58,8 +59,9 @@ Valori di default: se ICT_RAG_MONITOR_DB_NAME non è definita si usa `rag-intera
 2. Interazioni: elenco paginato, filtrabile e ricercabile.
 3. Dettaglio interazione: consultazione completa di una riga.
 4. Anomalie: viste predefinite che applicano filtri a Interazioni.
+5. Impostazioni: host, porta, database e tabella della connessione ai log.
 
-Non sono previste impostazioni dalla UI: la connessione è definita in wp-config.php.
+Le credenziali (utente e password) non sono impostabili dalla UI: restano costanti di wp-config.php.
 
 ### Dashboard
 
@@ -116,7 +118,7 @@ L'elenco non carica mai l'intera tabella: richiede filtro temporale e paginazion
 Struttura proposta:
 
 - bootstrap con header WordPress e menu admin;
-- configurazione esclusivamente da costanti;
+- configurazione: credenziali da costanti di wp-config.php; host, porta, database e tabella da opzione WordPress, con le costanti omonime che hanno la precedenza;
 - repository read-only per SQL, filtri e mapping delle righe;
 - pagine/controller separati per dashboard, elenco e dettaglio;
 - JavaScript amministrativo minimo per espansioni e grafici, caricato solo nelle pagine del plugin;
@@ -128,7 +130,7 @@ Alert, email, cron, export, download dei testi, scrittura o cancellazione log, r
 
 ## Criteri di accettazione
 
-1. Solo chi possiede manage_options accede alle quattro pagine.
+1. Solo chi possiede manage_options accede alle pagine del plugin (compresa Impostazioni).
 2. Il plugin esegue esclusivamente SELECT sui log.
 3. Dashboard, filtri e statistiche sono corretti per l'intervallo scelto.
 4. La ricerca trova testo in domanda, risposta LLM e risposta consegnata senza SQL injection.

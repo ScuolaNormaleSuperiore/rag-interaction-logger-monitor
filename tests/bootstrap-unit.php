@@ -2,7 +2,7 @@
 /**
  * Unit tests bootstrap.
  *
- * Boots only the Composer autoloader: no WordPress, no database.
+ * Boots the Composer autoloader (test tooling) and the plugin autoloader: no WordPress, no database.
  *
  * @package RagInteractionLoggerMonitor
  */
@@ -22,3 +22,8 @@ if ( ! file_exists( $rilm_autoload ) ) {
 }
 
 require_once $rilm_autoload;
+
+// Plugin classes are loaded by the plugin's own autoloader, as in production.
+require_once dirname( __DIR__ ) . '/includes/class-autoloader.php';
+
+( new \RILM\Autoloader( dirname( __DIR__ ) . '/includes' ) )->register();
