@@ -96,9 +96,9 @@ class Notices {
 	public static function message_for( string $status ): string {
 		switch ( $status ) {
 			case Connection::STATUS_NOT_CONFIGURED:
-				return esc_html__( 'The connection to the interaction log database is not configured yet. Define the database user and password in wp-config.php and set the host.', 'rag-interaction-logger-monitor' );
+				return esc_html__( 'The connection to the interaction log database is not configured yet. Complete the host, the database user and the password in Settings, or define the password in wp-config.php.', 'rag-interaction-logger-monitor' );
 			case Connection::STATUS_INVALID:
-				return esc_html__( 'The connection settings for the interaction log database are not valid. Check the host, port, database and table.', 'rag-interaction-logger-monitor' );
+				return esc_html__( 'The connection settings for the interaction log database are not valid. Check the host, port, database, table and user.', 'rag-interaction-logger-monitor' );
 			case Connection::STATUS_UNREACHABLE:
 				return esc_html__( 'The interaction log database cannot be reached. Check the connection settings and that the database server is available.', 'rag-interaction-logger-monitor' );
 			default:

@@ -78,7 +78,7 @@ class SettingsTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Valid values are stored as the four fields only.
+	 * Valid values are stored as the permitted fields only.
 	 *
 	 * @return void
 	 */
@@ -90,6 +90,7 @@ class SettingsTest extends WP_UnitTestCase {
 				'port'  => '03307',
 				'name'  => 'other-db',
 				'table' => 'other_table',
+				'user'  => 'logger_reader_user',
 			)
 		);
 
@@ -99,22 +100,23 @@ class SettingsTest extends WP_UnitTestCase {
 				'port'  => '3307',
 				'name'  => 'other-db',
 				'table' => 'other_table',
+				'user'  => 'logger_reader_user',
 			),
 			get_option( Config::OPTION_NAME )
 		);
 	}
 
 	/**
-	 * Credentials and unknown keys are dropped, never stored.
+	 * The password and unknown keys are dropped, never stored.
 	 *
 	 * @return void
 	 */
-	public function test_credentials_and_unknown_keys_are_not_stored(): void {
+	public function test_password_and_unknown_keys_are_not_stored(): void {
 		update_option(
 			Config::OPTION_NAME,
 			array(
 				'host'     => 'db.example.test',
-				'user'     => 'attacker_user',
+				'user'     => 'logger_reader_user',
 				'password' => 'attacker_password',
 				'extra'    => 'x',
 			)
@@ -122,8 +124,9 @@ class SettingsTest extends WP_UnitTestCase {
 
 		$stored = get_option( Config::OPTION_NAME );
 
-		$this->assertSame( array( 'host', 'port', 'name', 'table' ), array_keys( $stored ) );
-		$this->assertStringNotContainsString( 'attacker', wp_json_encode( $stored ) );
+		$this->assertSame( array( 'host', 'port', 'name', 'table', 'user' ), array_keys( $stored ) );
+		$this->assertSame( 'logger_reader_user', $stored['user'] );
+		$this->assertStringNotContainsString( 'attacker_password', wp_json_encode( $stored ) );
 	}
 
 	/**
@@ -234,11 +237,11 @@ class SettingsTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The form posts to options.php with the Settings API nonce and has no credential input.
+	 * The form posts to options.php with the Settings API nonce, and the password has its own empty field.
 	 *
 	 * @return void
 	 */
-	public function test_page_form_is_protected_and_has_no_credential_fields(): void {
+	public function test_page_form_is_protected_and_the_password_field_is_empty(): void {
 		$output = $this->render_page( array( $this, 'empty_config' ) );
 
 		$this->assertStringContainsString( 'action="options.php"', $output );
@@ -246,10 +249,11 @@ class SettingsTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '_wpnonce', $output );
 		$this->assertStringContainsString( 'name="rilm_settings[host]"', $output );
 		$this->assertStringContainsString( 'name="rilm_settings[table]"', $output );
-		$this->assertStringNotContainsString( 'type="password"', $output );
-		$this->assertStringNotContainsString( 'rilm_settings[user]', $output );
-		$this->assertStringNotContainsString( 'rilm_settings[password]', $output );
-		$this->assertStringContainsString( 'not defined in wp-config.php', $output );
+		$this->assertStringContainsString( 'rilm_settings[user]', $output );
+		$this->assertMatchesRegularExpression( '/<input type="password" id="rilm-password" name="rilm_db_password" value="" /', $output );
+		$this->assertStringContainsString( 'autocomplete="new-password"', $output );
+		$this->assertStringNotContainsString( 'rilm_settings[password]', $output, 'The password is not part of the settings array.' );
+		$this->assertStringContainsString( 'Database password', $output );
 	}
 
 	/**
@@ -591,6 +595,6 @@ class SettingsTest extends WP_UnitTestCase {
 		global $wp_settings_sections, $wp_settings_fields;
 
 		$this->assertArrayHasKey( Settings::SECTION, $wp_settings_sections[ Menu::SLUG_SETTINGS ] );
-		$this->assertCount( 4, $wp_settings_fields[ Menu::SLUG_SETTINGS ][ Settings::SECTION ] );
+		$this->assertCount( count( Config::FIELDS ) + 1, $wp_settings_fields[ Menu::SLUG_SETTINGS ][ Settings::SECTION ], 'The fields of the settings array plus the password.' );
 	}
 }

@@ -14,3 +14,4 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 // The plugin classes are not loaded during uninstall: the option name is repeated on purpose.
 delete_option( 'rilm_settings' );
+delete_option( 'rilm_db_password' );

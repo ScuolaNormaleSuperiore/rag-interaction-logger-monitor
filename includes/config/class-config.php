@@ -14,14 +14,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Resolves the connection configuration of the interaction log database.
  *
- * Credentials (user and password) come only from `wp-config.php` constants and are
- * never read from options. Host, port, database and table resolve in this order:
+ * The password comes only from a `wp-config.php` constant. User, host, port,
+ * database and table resolve in this order:
  * constant, then the `rilm_settings` option, then the default value.
  */
 class Config {
 
 	/**
-	 * Name of the option holding the non-secret connection parameters.
+	 * Name of the option holding the connection parameters except the password.
 	 */
 	public const OPTION_NAME = 'rilm_settings';
 
@@ -56,14 +56,19 @@ class Config {
 	public const SOURCE_DEFAULT = 'default';
 
 	/**
+	 * The password was saved from the Settings page (encrypted).
+	 */
+	public const SOURCE_SAVED = 'saved';
+
+	/**
 	 * No value is available.
 	 */
 	public const SOURCE_MISSING = 'missing';
 
 	/**
-	 * Non-secret fields that can be set from the Settings page.
+	 * Fields that can be set from the Settings page.
 	 */
-	public const FIELDS = array( 'host', 'port', 'name', 'table' );
+	public const FIELDS = array( 'host', 'port', 'name', 'table', 'user' );
 
 	/**
 	 * Constants read for every setting.
@@ -101,22 +106,44 @@ class Config {
 	private $constants;
 
 	/**
+	 * Password saved from the Settings page, or a callable that reads it on first use.
+	 *
+	 * @var string|callable|null
+	 */
+	private $saved_password;
+
+	/**
+	 * Whether the saved password has been read.
+	 *
+	 * @var bool
+	 */
+	private $saved_password_read = false;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param array $options   Values of the `rilm_settings` option.
-	 * @param array $constants Values of the defined constants, keyed by setting.
+	 * @param array                $options        Values of the `rilm_settings` option.
+	 * @param array                $constants      Values of the defined constants, keyed by setting.
+	 * @param string|callable|null $saved_password Password saved from the Settings page, or a callable returning it
+	 *                                             (called only when the password is needed).
 	 */
-	public function __construct( array $options = array(), array $constants = array() ) {
-		$this->options   = $options;
-		$this->constants = $constants;
+	public function __construct( array $options = array(), array $constants = array(), $saved_password = null ) {
+		$this->options        = $options;
+		$this->constants      = $constants;
+		$this->saved_password = $saved_password;
 	}
 
 	/**
 	 * Builds the configuration from the option and the `wp-config.php` constants.
 	 *
+	 * The saved password is decrypted only if and when something asks for it.
+	 *
+	 * @param Secret_Store|null $store Store of the saved password; defaults to the one of this site.
 	 * @return self
 	 */
-	public static function from_environment(): self {
+	public static function from_environment( ?Secret_Store $store = null ): self {
+		$store = $store ?? Secret_Store::from_environment();
+
 		$options = get_option( self::OPTION_NAME, array() );
 
 		if ( ! is_array( $options ) ) {
@@ -131,7 +158,13 @@ class Config {
 			}
 		}
 
-		return new self( $options, $constants );
+		return new self(
+			$options,
+			$constants,
+			static function () use ( $store ): ?string {
+				return $store->read();
+			}
+		);
 	}
 
 	/**
@@ -194,6 +227,16 @@ class Config {
 	}
 
 	/**
+	 * Tells whether a database user name is acceptable.
+	 *
+	 * @param mixed $value Candidate value.
+	 * @return bool
+	 */
+	public static function is_valid_user( $value ): bool {
+		return is_string( $value ) && 1 === preg_match( '/^[A-Za-z0-9._@-]{1,128}$/', $value );
+	}
+
+	/**
 	 * Returns the host.
 	 *
 	 * @return string Empty when not configured.
@@ -232,25 +275,40 @@ class Config {
 	}
 
 	/**
-	 * Returns the database user, defined only by a constant.
+	 * Returns the database user.
 	 *
 	 * @return string
 	 */
 	public function user(): string {
-		$value = $this->constants['user'] ?? '';
-
-		return is_string( $value ) ? $value : '';
+		return $this->text_value( 'user' );
 	}
 
 	/**
-	 * Returns the database password, defined only by a constant.
+	 * Returns the database password: the constant when it is defined, otherwise the saved one.
 	 *
-	 * @return string
+	 * @return string Empty when there is none or the constant is not a string.
 	 */
 	public function password(): string {
-		$value = $this->constants['password'] ?? '';
+		if ( array_key_exists( 'password', $this->constants ) ) {
+			return is_string( $this->constants['password'] ) ? $this->constants['password'] : '';
+		}
 
-		return is_string( $value ) ? $value : '';
+		return $this->saved_password() ?? '';
+	}
+
+	/**
+	 * Tells where the password comes from, without reading it from storage.
+	 *
+	 * @return string SOURCE_CONSTANT, SOURCE_SAVED or SOURCE_MISSING.
+	 */
+	public function password_source(): string {
+		if ( array_key_exists( 'password', $this->constants ) ) {
+			return self::SOURCE_CONSTANT;
+		}
+
+		$saved = $this->saved_password();
+
+		return ( null !== $saved && '' !== $saved ) ? self::SOURCE_SAVED : self::SOURCE_MISSING;
 	}
 
 	/**
@@ -346,19 +404,36 @@ class Config {
 			}
 		}
 
-		foreach ( array( 'user', 'password' ) as $key ) {
-			if ( ! array_key_exists( $key, $this->constants ) ) {
-				$problems[ $key ] = self::STATUS_NOT_CONFIGURED;
-			} elseif ( ! is_string( $this->constants[ $key ] ) || '' === $this->constants[ $key ] ) {
-				$problems[ $key ] = self::STATUS_INVALID;
+		if ( array_key_exists( 'password', $this->constants ) ) {
+			if ( ! is_string( $this->constants['password'] ) || '' === $this->constants['password'] ) {
+				$problems['password'] = self::STATUS_INVALID;
 			}
+		} elseif ( self::SOURCE_MISSING === $this->password_source() ) {
+			$problems['password'] = self::STATUS_NOT_CONFIGURED;
 		}
 
 		return $problems;
 	}
 
 	/**
-	 * Resolves a non-secret field: constant, then option, then default.
+	 * Returns the password saved from the Settings page, reading it at most once.
+	 *
+	 * @return string|null Null when none is saved or it cannot be read.
+	 */
+	private function saved_password(): ?string {
+		if ( ! $this->saved_password_read ) {
+			$this->saved_password_read = true;
+
+			if ( is_callable( $this->saved_password ) ) {
+				$this->saved_password = call_user_func( $this->saved_password );
+			}
+		}
+
+		return is_string( $this->saved_password ) ? $this->saved_password : null;
+	}
+
+	/**
+	 * Resolves a Settings field: constant, then option, then default.
 	 *
 	 * @param string $key One of the FIELDS values.
 	 * @return array{0: mixed, 1: string} Value and one of the SOURCE_* constants.
@@ -414,6 +489,8 @@ class Config {
 				return self::is_valid_database( $value );
 			case 'table':
 				return self::is_valid_table( $value );
+			case 'user':
+				return self::is_valid_user( $value );
 			default:
 				return false;
 		}

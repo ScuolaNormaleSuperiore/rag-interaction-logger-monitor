@@ -16,13 +16,12 @@ use RILM\Config\Config;
 class ConfigTest extends TestCase {
 
 	/**
-	 * Constants that make the configuration complete.
+	 * Constant that makes the configuration complete.
 	 *
 	 * @return array
 	 */
 	private static function credentials(): array {
 		return array(
-			'user'     => 'reader',
 			'password' => 'secret-value',
 		);
 	}
@@ -33,7 +32,10 @@ class ConfigTest extends TestCase {
 	 * @return array
 	 */
 	private static function options(): array {
-		return array( 'host' => 'db.example.test' );
+		return array(
+			'host' => 'db.example.test',
+			'user' => 'reader',
+		);
 	}
 
 	/**
@@ -119,33 +121,35 @@ class ConfigTest extends TestCase {
 	}
 
 	/**
-	 * User and password are never taken from the option.
+	 * Only the password is never taken from the option.
 	 *
 	 * @return void
 	 */
-	public function test_credentials_are_never_read_from_options(): void {
-		$options = self::options() + array(
-			'user'     => 'from-option',
-			'password' => 'from-option',
+	public function test_password_is_never_read_from_options(): void {
+		$options = array_merge(
+			self::options(),
+			array(
+				'user'     => 'from-option',
+				'password' => 'from-option',
+			)
 		);
 		$config  = new Config( $options, array() );
 
-		$this->assertSame( '', $config->user() );
+		$this->assertSame( 'from-option', $config->user() );
 		$this->assertSame( '', $config->password() );
 		$this->assertSame( Config::STATUS_NOT_CONFIGURED, $config->status() );
-		$this->assertArrayHasKey( 'user', $config->problem_fields() );
 		$this->assertArrayHasKey( 'password', $config->problem_fields() );
 	}
 
 	/**
-	 * Credentials defined as constants are returned as they are.
+	 * The user may come from a constant and the password always does.
 	 *
 	 * @return void
 	 */
-	public function test_credentials_come_from_constants(): void {
-		$config = new Config( self::options(), self::credentials() );
+	public function test_user_and_password_can_come_from_constants(): void {
+		$config = new Config( self::options(), self::credentials() + array( 'user' => 'constant-reader' ) );
 
-		$this->assertSame( 'reader', $config->user() );
+		$this->assertSame( 'constant-reader', $config->user() );
 		$this->assertSame( 'secret-value', $config->password() );
 	}
 
@@ -225,6 +229,8 @@ class ConfigTest extends TestCase {
 			'table with dot'       => array( 'table', 'db.table' ),
 			'table with space'     => array( 'table', 'my table' ),
 			'table too long'       => array( 'table', str_repeat( 'a', 65 ) ),
+			'user with space'      => array( 'user', 'reader account' ),
+			'user with slash'      => array( 'user', 'reader/account' ),
 		);
 	}
 
@@ -242,6 +248,7 @@ class ConfigTest extends TestCase {
 		$this->assertTrue( Config::is_valid_port( '65535' ) );
 		$this->assertTrue( Config::is_valid_database( 'rag-interaction-logger-db' ) );
 		$this->assertTrue( Config::is_valid_table( 'ril_interactions' ) );
+		$this->assertTrue( Config::is_valid_user( 'logger_reader_user@localhost' ) );
 	}
 
 	/**

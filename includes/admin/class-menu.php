@@ -7,6 +7,8 @@
 
 namespace RILM\Admin;
 
+use RILM\Database\Connection;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -54,6 +56,29 @@ class Menu {
 	private $hook_suffixes = array();
 
 	/**
+	 * Hook suffix of the detail screen, empty until it is registered.
+	 *
+	 * @var string
+	 */
+	private $detail_hook_suffix = '';
+
+	/**
+	 * Connection to the log database, shared with the pages that read it.
+	 *
+	 * @var Connection|null
+	 */
+	private $connection;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param Connection|null $connection Connection to the log database; pages create their own when null.
+	 */
+	public function __construct( ?Connection $connection = null ) {
+		$this->connection = $connection;
+	}
+
+	/**
 	 * Hooks the menu registration into WordPress.
 	 *
 	 * @return void
@@ -68,7 +93,8 @@ class Menu {
 	 * @return void
 	 */
 	public function register(): void {
-		$this->hook_suffixes = array();
+		$this->hook_suffixes      = array();
+		$this->detail_hook_suffix = '';
 
 		// add_menu_page() lists the item even without the capability: register nothing for other users.
 		if ( ! Access::is_allowed() ) {
@@ -80,7 +106,7 @@ class Menu {
 			__( 'Monitor RAG', 'rag-interaction-logger-monitor' ),
 			self::CAPABILITY,
 			self::SLUG_DASHBOARD,
-			array( new Dashboard_Page(), 'render' ),
+			array( new Dashboard_Page( $this->connection ), 'render' ),
 			'dashicons-chart-area',
 			80
 		);
@@ -99,13 +125,13 @@ class Menu {
 		$this->add_submenu(
 			__( 'Interactions', 'rag-interaction-logger-monitor' ),
 			self::SLUG_INTERACTIONS,
-			array( new Interactions_Page(), 'render' )
+			array( new Interactions_Page( $this->connection ), 'render' )
 		);
 
 		$this->add_submenu(
 			__( 'Anomalies', 'rag-interaction-logger-monitor' ),
 			self::SLUG_ANOMALIES,
-			array( new Anomalies_Page(), 'render' )
+			array( new Anomalies_Page( $this->connection ), 'render' )
 		);
 
 		$this->add_submenu(
@@ -121,12 +147,23 @@ class Menu {
 			__( 'Interaction detail', 'rag-interaction-logger-monitor' ),
 			self::CAPABILITY,
 			self::SLUG_DETAIL,
-			array( new Detail_Page(), 'render' )
+			array( new Detail_Page( $this->connection ), 'render' )
 		);
 
 		if ( false !== $detail ) {
-			$this->hook_suffixes[] = $detail;
+			$this->hook_suffixes[]    = $detail;
+			$this->detail_hook_suffix = $detail;
 		}
+	}
+
+	/**
+	 * Tells whether a hook suffix is the one of the interaction detail screen.
+	 *
+	 * @param string $hook_suffix Hook suffix passed to `admin_enqueue_scripts`.
+	 * @return bool
+	 */
+	public function is_detail_screen( string $hook_suffix ): bool {
+		return '' !== $this->detail_hook_suffix && $this->detail_hook_suffix === $hook_suffix;
 	}
 
 	/**

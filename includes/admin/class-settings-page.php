@@ -8,6 +8,7 @@
 namespace RILM\Admin;
 
 use RILM\Config\Config;
+use RILM\Config\Secret_Store;
 use RILM\Database\Connection;
 use RILM\Database\Connection_Tester;
 
@@ -36,6 +37,21 @@ class Settings_Page {
 	public const TEST_BUTTON = 'rilm_test_connection';
 
 	/**
+	 * Nonce action of the form that removes the saved password.
+	 */
+	public const REMOVE_NONCE_ACTION = 'rilm_remove_password';
+
+	/**
+	 * Nonce field name of the form that removes the saved password.
+	 */
+	public const REMOVE_NONCE_FIELD = 'rilm_remove_password_nonce';
+
+	/**
+	 * Name of the button that removes the saved password.
+	 */
+	public const REMOVE_BUTTON = 'rilm_remove_password';
+
+	/**
 	 * Provider of the current configuration.
 	 *
 	 * @var callable
@@ -50,13 +66,24 @@ class Settings_Page {
 	private $tester;
 
 	/**
+	 * Encrypted storage of the database password.
+	 *
+	 * @var Secret_Store
+	 */
+	private $store;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param callable|null          $config_provider Returns the current Config; defaults to the environment.
 	 * @param Connection_Tester|null $tester          Connection tester; defaults to the real one.
+	 * @param Secret_Store|null      $store           Storage of the encrypted password; defaults to the one of this site.
 	 */
-	public function __construct( ?callable $config_provider = null, ?Connection_Tester $tester = null ) {
-		$this->config_provider = $config_provider ?? array( Config::class, 'from_environment' );
+	public function __construct( ?callable $config_provider = null, ?Connection_Tester $tester = null, ?Secret_Store $store = null ) {
+		$this->store           = $store ?? Secret_Store::from_environment();
+		$this->config_provider = $config_provider ?? function (): Config {
+			return Config::from_environment( $this->store );
+		};
 		$this->tester          = $tester ?? new Connection_Tester();
 	}
 
@@ -68,6 +95,8 @@ class Settings_Page {
 	public function render(): void {
 		Access::require_admin();
 
+		// The password is removed before the configuration is read, so the page shows the new state.
+		$removed     = $this->handle_remove_request();
 		$config      = call_user_func( $this->config_provider );
 		$test_result = $this->handle_test_request( $config );
 		?>
@@ -75,6 +104,14 @@ class Settings_Page {
 			<h1><?php esc_html_e( 'Settings', 'rag-interaction-logger-monitor' ); ?></h1>
 			<?php
 			settings_errors( Config::OPTION_NAME );
+			settings_errors( Secret_Store::OPTION_NAME );
+
+			if ( $removed ) {
+				wp_admin_notice(
+					esc_html__( 'The saved password was removed.', 'rag-interaction-logger-monitor' ),
+					array( 'type' => 'success' )
+				);
+			}
 
 			if ( null !== $test_result ) {
 				$this->render_test_result( $test_result );
@@ -89,6 +126,7 @@ class Settings_Page {
 				submit_button();
 				?>
 			</form>
+			<?php $this->render_remove_form( $config ); ?>
 			<h2><?php esc_html_e( 'Test the connection', 'rag-interaction-logger-monitor' ); ?></h2>
 			<p><?php esc_html_e( 'Checks the saved settings: save your changes first.', 'rag-interaction-logger-monitor' ); ?></p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . Menu::SLUG_SETTINGS ) ); ?>">
@@ -98,6 +136,43 @@ class Settings_Page {
 				?>
 			</form>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Removes the saved password when the removal form was submitted.
+	 *
+	 * The nonce is verified before anything is deleted; an invalid one stops the request.
+	 *
+	 * @return bool Whether a saved password was removed.
+	 */
+	private function handle_remove_request(): bool {
+		if ( ! isset( $_POST[ self::REMOVE_BUTTON ] ) ) {
+			return false;
+		}
+
+		check_admin_referer( self::REMOVE_NONCE_ACTION, self::REMOVE_NONCE_FIELD );
+
+		return delete_option( Secret_Store::OPTION_NAME );
+	}
+
+	/**
+	 * Prints the form that removes the saved password, when there is one that the form may remove.
+	 *
+	 * @param Config $config Configuration.
+	 * @return void
+	 */
+	private function render_remove_form( Config $config ): void {
+		if ( Config::SOURCE_CONSTANT === $config->password_source() || ! $this->store->has_saved() ) {
+			return;
+		}
+		?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . Menu::SLUG_SETTINGS ) ); ?>">
+			<?php
+			wp_nonce_field( self::REMOVE_NONCE_ACTION, self::REMOVE_NONCE_FIELD );
+			submit_button( __( 'Remove the saved password', 'rag-interaction-logger-monitor' ), 'delete', self::REMOVE_BUTTON, false );
+			?>
+		</form>
 		<?php
 	}
 
@@ -144,35 +219,31 @@ class Settings_Page {
 	}
 
 	/**
-	 * Tells whether the user and password constants are defined, never their values.
+	 * Tells where the password comes from, never its value.
 	 *
 	 * @param Config $config Configuration.
 	 * @return void
 	 */
 	private function render_credentials_status( Config $config ): void {
 		$problems = $config->problem_fields();
+		$source   = $config->password_source();
 
-		echo '<p>';
-
-		foreach ( array(
-			'user'     => __( 'Database user', 'rag-interaction-logger-monitor' ),
-			'password' => __( 'Database password', 'rag-interaction-logger-monitor' ),
-		) as $key => $label ) {
-			if ( ! isset( $problems[ $key ] ) ) {
-				$state = __( 'defined in wp-config.php', 'rag-interaction-logger-monitor' );
-			} elseif ( Config::STATUS_NOT_CONFIGURED === $problems[ $key ] ) {
-				$state = __( 'not defined in wp-config.php', 'rag-interaction-logger-monitor' );
-			} else {
-				$state = __( 'defined but not valid', 'rag-interaction-logger-monitor' );
-			}
-
-			printf(
-				'<strong>%1$s:</strong> %2$s<br />',
-				esc_html( $label ),
-				esc_html( $state )
-			);
+		if ( isset( $problems['password'] ) && Config::SOURCE_CONSTANT === $source ) {
+			$state = __( 'defined in wp-config.php but not valid', 'rag-interaction-logger-monitor' );
+		} elseif ( Config::SOURCE_CONSTANT === $source ) {
+			$state = __( 'defined in wp-config.php', 'rag-interaction-logger-monitor' );
+		} elseif ( Config::SOURCE_SAVED === $source ) {
+			$state = __( 'saved here, encrypted', 'rag-interaction-logger-monitor' );
+		} elseif ( $this->store->has_saved() ) {
+			$state = __( 'saved here, but it cannot be read: type it again', 'rag-interaction-logger-monitor' );
+		} else {
+			$state = __( 'not set', 'rag-interaction-logger-monitor' );
 		}
 
-		echo '</p>';
+		printf(
+			'<p><strong>%1$s:</strong> %2$s</p>',
+			esc_html__( 'Database password', 'rag-interaction-logger-monitor' ),
+			esc_html( $state )
+		);
 	}
 }

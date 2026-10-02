@@ -106,5 +106,26 @@ class AutoloaderTest extends TestCase {
 		$this->assertTrue( class_exists( 'RILM\\Plugin' ) );
 		$this->assertTrue( class_exists( 'RILM\\Admin\\Menu' ) );
 		$this->assertTrue( class_exists( 'RILM\\Admin\\Dashboard_Page' ) );
+		$this->assertTrue( class_exists( 'RILM\\Repository\\Filters' ) );
+	}
+
+	/**
+	 * Interfaces are loaded from interface-*.php files, as the WordPress standard asks.
+	 *
+	 * @return void
+	 */
+	public function test_registered_autoloader_loads_interfaces(): void {
+		$this->assertTrue( interface_exists( 'RILM\\Database\\Reader' ) );
+	}
+
+	/**
+	 * The file kind (class, interface, trait) changes only the file prefix.
+	 *
+	 * @return void
+	 */
+	public function test_kind_selects_the_file_prefix(): void {
+		$this->assertSame( '/plugin/includes/database/interface-reader.php', $this->autoloader->path_for( 'RILM\\Database\\Reader', 'interface' ) );
+		$this->assertSame( '/plugin/includes/database/trait-reader.php', $this->autoloader->path_for( 'RILM\\Database\\Reader', 'trait' ) );
+		$this->assertSame( '/plugin/includes/database/class-reader.php', $this->autoloader->path_for( 'RILM\\Database\\Reader' ) );
 	}
 }

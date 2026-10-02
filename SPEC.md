@@ -41,13 +41,14 @@ Question, llm_answer, delivered e user_id possono contenere dati personali; i co
 - Ogni pagina richiede manage_options. Non esistono pagine pubbliche né REST API pubbliche.
 - Ogni form richiede capability e nonce WordPress.
 - Il DB usa un utente distinto dal logger, con solo SELECT sulla tabella configurata (default rag-interaction-logger-db.ril_interactions). Non sono ammessi INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, GRANT o altri privilegi di amministrazione.
-- Utente e password del database sono costanti di wp-config.php, mai opzioni WordPress e mai visibili nella UI. Host, porta, database e tabella sono impostabili dalla pagina Impostazioni e salvati in un'unica opzione WordPress (`rilm_settings`); se la costante corrispondente è definita in wp-config.php, la costante ha la precedenza e il campo è mostrato in sola lettura.
-- La pagina Impostazioni richiede manage_options, usa la Settings API di WordPress (nonce incluso) e non mostra mai utente né password.
+- Host, porta, database, tabella e utente sono impostabili dalla pagina Impostazioni e salvati in un'unica opzione WordPress (`rilm_settings`); se la costante corrispondente è definita in wp-config.php, la costante ha la precedenza e il campo è mostrato in sola lettura.
+- La password del database si definisce con la costante `ICT_RAG_MONITOR_DB_PASSWORD` in wp-config.php (ha la precedenza e blocca il campo) oppure dalla pagina Impostazioni, dove è salvata cifrata in un'opzione separata (`rilm_db_password`, senza autoload, non esposta via REST). La cifratura usa libsodium (`secretbox`, cifratura autenticata) con una chiave derivata da `SECURE_AUTH_KEY` e `SECURE_AUTH_SALT` di wp-config.php, che non sono salvate nel database. Il campo non mostra mai né la password né il testo cifrato: lasciarlo vuoto mantiene quella salvata e un pulsante, protetto da nonce, la rimuove. Senza chiavi di sicurezza uniche (assenti o ancora quelle di esempio) la pagina non salva la password e invita a definirle o a usare la costante. Limite: la cifratura protegge da una fuga del solo database (dump, backup, SQL injection altrove), non da chi può leggere anche wp-config.php.
+- La pagina Impostazioni richiede manage_options, usa la Settings API di WordPress (nonce incluso) e non mostra mai la password.
 - La password non appare mai in HTML, log, diagnostica o errori. Gli errori admin sono generici e non espongono query, credenziali, testi delle interazioni o dettagli del driver.
 - Il monitor usa le stesse impostazioni TLS e l'infrastruttura della connessione database del sito WordPress; non introduce una configurazione TLS propria.
 - Il monitor apre una seconda connessione `wpdb`, distinta da quella del sito. Una piccola sottoclasse interna evita che un DB dei log non raggiungibile termini la richiesta: nell'admin appare un avviso sicuro e il sito continua a funzionare.
 
-Costanti: ICT_RAG_MONITOR_DB_USER e ICT_RAG_MONITOR_DB_PASSWORD sono obbligatorie e solo da wp-config.php. ICT_RAG_MONITOR_DB_HOST, ICT_RAG_MONITOR_DB_PORT, ICT_RAG_MONITOR_DB_NAME e ICT_RAG_MONITOR_DB_TABLE sono facoltative: se definite sostituiscono il valore delle Impostazioni.
+Costanti, tutte facoltative: ICT_RAG_MONITOR_DB_PASSWORD, ICT_RAG_MONITOR_DB_HOST, ICT_RAG_MONITOR_DB_PORT, ICT_RAG_MONITOR_DB_NAME, ICT_RAG_MONITOR_DB_TABLE e ICT_RAG_MONITOR_DB_USER. Se definite sostituiscono il valore delle Impostazioni (la password salvata dalle Impostazioni, nel caso di ICT_RAG_MONITOR_DB_PASSWORD). Una password deve però esistere in uno dei due modi per poter connettersi.
 
 Valori di default: porta `3306`, database `rag-interaction-logger-db`, tabella `ril_interactions`; l'host non ha default e deve venire da costante o Impostazioni. Il nome della tabella è un identificatore SQL, non un valore preparabile: va validato con una whitelist (solo lettere, numeri e underscore) e quotato con backtick; un valore non valido produce un avviso admin generico, senza query.
 
@@ -59,9 +60,9 @@ Valori di default: porta `3306`, database `rag-interaction-logger-db`, tabella `
 2. Interazioni: elenco paginato, filtrabile e ricercabile.
 3. Dettaglio interazione: consultazione completa di una riga.
 4. Anomalie: viste predefinite che applicano filtri a Interazioni.
-5. Impostazioni: host, porta, database e tabella della connessione ai log.
+5. Impostazioni: host, porta, database, tabella e utente della connessione ai log.
 
-Le credenziali (utente e password) non sono impostabili dalla UI: restano costanti di wp-config.php.
+La password si imposta dalla stessa pagina (salvata cifrata) oppure con la costante di wp-config.php; la pagina mostra solo da dove proviene (costante, salvata, non leggibile, assente), mai il suo valore.
 
 ### Dashboard
 
@@ -118,7 +119,7 @@ L'elenco non carica mai l'intera tabella: richiede filtro temporale e paginazion
 Struttura proposta:
 
 - bootstrap con header WordPress e menu admin;
-- configurazione: credenziali da costanti di wp-config.php; host, porta, database e tabella da opzione WordPress, con le costanti omonime che hanno la precedenza;
+- configurazione: host, porta, database, tabella e utente da opzione WordPress; password da costante di wp-config.php oppure salvata cifrata in un'opzione separata; le costanti omonime hanno sempre la precedenza;
 - repository read-only per SQL, filtri e mapping delle righe;
 - pagine/controller separati per dashboard, elenco e dettaglio;
 - JavaScript amministrativo minimo per espansioni e grafici, caricato solo nelle pagine del plugin;

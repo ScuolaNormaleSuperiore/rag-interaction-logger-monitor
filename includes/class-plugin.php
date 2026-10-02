@@ -29,9 +29,9 @@ class Plugin {
 	 * @return void
 	 */
 	public function init(): void {
-		$menu       = new Menu();
-		$assets     = new Assets( $menu );
 		$connection = new Connection( Config::from_environment() );
+		$menu       = new Menu( $connection );
+		$assets     = new Assets( $menu );
 		$notices    = new Notices( $menu, $connection );
 		$settings   = new Settings();
 

@@ -63,5 +63,10 @@ class Assets {
 			array(),
 			RILM_VERSION
 		);
+
+		// The comparison of the two answers uses the core diff table, styled by the core "revisions" stylesheet.
+		if ( $this->menu->is_detail_screen( $hook_suffix ) ) {
+			wp_enqueue_style( 'revisions' );
+		}
 	}
 }

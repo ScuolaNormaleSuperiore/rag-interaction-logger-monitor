@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Validates the values submitted from the Settings page.
  *
- * Only the four non-secret fields are accepted: anything else, including a
- * user or password, is dropped. A field that is invalid keeps its previous value.
+ * Only the five permitted fields are accepted: anything else, including the
+ * password, is dropped. A field that is invalid keeps its previous value.
  */
 class Settings_Sanitizer {
 
@@ -41,7 +41,7 @@ class Settings_Sanitizer {
 	 * Sanitizes the submitted option value.
 	 *
 	 * @param mixed $input Submitted value.
-	 * @return array<string, string> The four fields, as strings.
+	 * @return array<string, string> The permitted fields, as strings.
 	 */
 	public function sanitize( $input ): array {
 		$previous = get_option( Config::OPTION_NAME, array() );

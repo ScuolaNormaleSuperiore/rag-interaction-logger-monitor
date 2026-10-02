@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * errors (messages and queries may contain sensitive data) and refuses every
  * statement that is not a `SELECT`, as a second barrier behind the database grant.
  */
-class Guarded_Wpdb extends \wpdb {
+class Guarded_Wpdb extends \wpdb implements Reader {
 
 	/**
 	 * Opens the connection without ever terminating the request.
