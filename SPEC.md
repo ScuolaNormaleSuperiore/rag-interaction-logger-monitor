@@ -32,7 +32,7 @@ La sola fonte della v1 è ril_interactions, con lo schema del repository rag-int
 
 I campi visualizzati includono: id, timestamp UTC, instance, user_id, outcome, durata, turn id, question, llm_answer, delivered, stato e verdict Guardrails, other_plugin_reply, recall_count e recall_top_score.
 
-Le colonne tools_used, tool_input, tool_output e recall_sources sono state aggiunte alla tabella in seguito e possono mancare nelle installazioni più vecchie: nella v1 compaiono solo nel Dettaglio, quando esistono, e non sono usate in elenco, filtri, ricerca o Dashboard.
+Le colonne tools_used, tool_input, tool_output e recall_sources sono state aggiunte alla tabella in seguito e possono mancare nelle installazioni più vecchie. tool_input, tool_output e recall_sources compaiono solo nel Dettaglio, quando esistono, e non sono usate in elenco, filtri, ricerca o Dashboard (tool_input e tool_output sono disattivate di default nel logger). tools_used (nomi degli strumenti e dei moduli eseguiti, separati da virgola) compare anche nel Dettaglio e, quando la colonna esiste, è usata nel filtro "strumenti usati" dell'elenco e negli indicatori della Dashboard (vedi sotto); se la colonna manca, filtro e indicatori non compaiono.
 
 Question, llm_answer, delivered e user_id possono contenere dati personali; i contenuti completi restano visibili solo agli amministratori.
 
@@ -74,6 +74,7 @@ Per l'intervallo selezionato, mostrare:
 - conteggio e percentuale senza Guardrails;
 - durata media e mediana esatta dei turni completati (outcome diverso da incomplete e duration_ms non NULL, quindi generated e fast_reply);
 - percentuale generated con recall_count uguale a zero;
+- se la colonna tools_used esiste: numero e percentuale dei turni che hanno usato almeno uno strumento, e per ciascuno strumento (o modulo) il numero di turni in cui è comparso, ciascuno con un collegamento all'elenco già filtrato; un turno con più strumenti conta in ciascuno, quindi la somma per strumento può superare il numero di turni con strumenti;
 - andamento giornaliero di turni, incomplete e blocchi;
 - link alle viste Interazioni già filtrate.
 
@@ -87,7 +88,9 @@ Ordinamento predefinito ts DESC e paginazione lato database. L'intervallo predef
 
 Le anteprime sono troncate visivamente ed espandibili senza lasciare l'elenco. Il dettaglio offre sempre la vista completa.
 
-Filtri combinabili: periodo, outcome, instance, user id, Guardrails presente/assente, verdict input/output, other_plugin_reply, recall vuoto e ricerca testuale.
+Filtri combinabili: periodo, outcome, instance, user id, Guardrails presente/assente, verdict input/output, other_plugin_reply, recall vuoto, risposte diverse, strumenti usati (sì/no, e per nome dello strumento; solo se la colonna tools_used esiste) e ricerca testuale.
+
+Nel form dell'elenco restano sempre visibili periodo (con le date personalizzate solo quando è scelto «personalizzato»), ricerca testuale, Guardrails e verdict input, più «strumenti usati» (sì/no) quando la colonna tools_used esiste; gli altri filtri (compreso il nome dello strumento), l'ordinamento e il numero di righe per pagina stanno in una sezione espandibile «filtri avanzati», che si apre da sola quando uno di questi controlli ha un valore diverso dal predefinito e indica quanti filtri sono attivi.
 
 La ricerca libera cerca in question, llm_answer e delivered con LIKE case-insensitive, parametrizzato e con wildcard costruiti in modo sicuro. Il testo cercato è inviato con POST e nonce WordPress, così non compare nell'URL; gli altri filtri non sensibili possono restare nell'URL. Non è previsto FULLTEXT nella v1: con migliaia di righe è adeguato. Tutti i valori delle query sono parametrizzati; le colonne ordinabili sono definite da una whitelist interna.
 
@@ -107,6 +110,14 @@ Viste predefinite:
 - blocchi output;
 - generated in cui llm_answer e delivered differiscono senza verdict output;
 - generated con recall_count uguale a zero.
+
+Se la colonna tools_used esiste, si aggiungono tre viste sugli strumenti (turni con tools_used non vuoto):
+
+- strumenti eseguiti ma turno incompleto (outcome incomplete);
+- strumenti eseguiti senza Guardrails (guard_present falso);
+- strumenti eseguiti con output bloccato (verdict output presente).
+
+Senza la colonna le tre viste non compaiono e il plugin non interroga tools_used.
 
 Le viste non inviano notifiche e non modificano dati.
 
