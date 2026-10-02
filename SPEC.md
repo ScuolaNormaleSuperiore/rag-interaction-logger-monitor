@@ -28,9 +28,11 @@ Plugin WordPress indipendente per ICT SNS che funge da backoffice di RAG Interac
 
 ## Fonte dati e confini
 
-La sola fonte della v1 è ril_interactions, con lo schema del repository rag-interaction-logger. Il monitor non modifica mai la tabella, non crea tabelle applicative e non esegue retention, purge, correzioni o backfill.
+La sola fonte della v1 è ril_interactions, con lo schema del repository rag-interaction-logger, definito in [schema.py](https://github.com/ScuolaNormaleSuperiore/rag-interaction-logger/blob/main/schema.py). Il monitor non modifica mai la tabella, non crea tabelle applicative e non esegue retention, purge, correzioni o backfill.
 
 I campi visualizzati includono: id, timestamp UTC, instance, user_id, outcome, durata, turn id, question, llm_answer, delivered, stato e verdict Guardrails, other_plugin_reply, recall_count e recall_top_score.
+
+Le colonne tools_used, tool_input, tool_output e recall_sources sono state aggiunte alla tabella in seguito e possono mancare nelle installazioni più vecchie: nella v1 compaiono solo nel Dettaglio, quando esistono, e non sono usate in elenco, filtri, ricerca o Dashboard.
 
 Question, llm_answer, delivered e user_id possono contenere dati personali; i contenuti completi restano visibili solo agli amministratori.
 
@@ -67,7 +69,7 @@ Per l'intervallo selezionato, mostrare:
 - conteggio e percentuale di generated, fast_reply e incomplete;
 - blocchi input/output per verdict;
 - conteggio e percentuale senza Guardrails;
-- durata media e mediana esatta dei turni completati;
+- durata media e mediana esatta dei turni completati (outcome diverso da incomplete e duration_ms non NULL, quindi generated e fast_reply);
 - percentuale generated con recall_count uguale a zero;
 - andamento giornaliero di turni, incomplete e blocchi;
 - link alle viste Interazioni già filtrate.
