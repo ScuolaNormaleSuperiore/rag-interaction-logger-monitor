@@ -7,6 +7,7 @@
 
 namespace RILM;
 
+use RILM\Admin\Access;
 use RILM\Admin\Assets;
 use RILM\Admin\Menu;
 use RILM\Admin\Notices;
@@ -36,11 +37,32 @@ class Plugin {
 		$settings   = new Settings();
 
 		add_action( 'init', array( $this, 'load_textdomain' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( RILM_PLUGIN_FILE ), array( $this, 'action_links' ) );
 
 		$menu->init();
 		$assets->init();
 		$notices->init();
 		$settings->init();
+	}
+
+	/**
+	 * Adds a Settings link to the plugin's row in the Plugins screen, before Deactivate.
+	 *
+	 * @param string[] $links Action links of the row, keyed by action.
+	 * @return string[]
+	 */
+	public function action_links( array $links ): array {
+		if ( ! Access::is_allowed() ) {
+			return $links;
+		}
+
+		$settings = sprintf(
+			'<a href="%1$s">%2$s</a>',
+			esc_url( add_query_arg( 'page', Menu::SLUG_SETTINGS, admin_url( 'admin.php' ) ) ),
+			esc_html__( 'Settings', 'rag-interaction-logger-monitor' )
+		);
+
+		return array( 'settings' => $settings ) + $links;
 	}
 
 	/**

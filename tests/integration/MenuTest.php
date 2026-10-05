@@ -352,6 +352,41 @@ class MenuTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The Plugins screen row gets a Settings link before the other actions, for an administrator.
+	 *
+	 * @return void
+	 */
+	public function test_plugins_row_has_a_settings_link(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+
+		( new Plugin() )->init();
+
+		$links = apply_filters(
+			'plugin_action_links_' . plugin_basename( RILM_PLUGIN_FILE ),
+			array(
+				'deactivate' => '<a href="#">Deactivate</a>',
+				'edit'       => '<a href="#">Edit</a>',
+			)
+		);
+
+		$this->assertSame( array( 'settings', 'deactivate', 'edit' ), array_keys( $links ) );
+		$this->assertSame( '<a href="' . esc_url( admin_url( 'admin.php?page=rilm-settings' ) ) . '">Settings</a>', $links['settings'] );
+	}
+
+	/**
+	 * A user who may not use the plugin does not get the link.
+	 *
+	 * @return void
+	 */
+	public function test_plugins_row_link_is_for_administrators_only(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+
+		$links = ( new Plugin() )->action_links( array( 'deactivate' => 'x' ) );
+
+		$this->assertSame( array( 'deactivate' => 'x' ), $links );
+	}
+
+	/**
 	 * The orchestrator wires the menu and the assets to the WordPress hooks.
 	 *
 	 * @return void
