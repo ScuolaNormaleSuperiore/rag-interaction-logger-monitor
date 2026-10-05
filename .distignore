@@ -1,0 +1,44 @@
+# Files and folders left out of the distribution package (one pattern per line).
+# A leading slash anchors the pattern at the plugin root; a trailing slash matches folders only.
+
+# Version control, editors and AI tooling
+/.git/
+/.githooks/
+/.codex/
+/.claude/
+/.agents/
+/.vscode/
+/.idea/
+.gitignore
+.gitattributes
+.gitkeep
+.DS_Store
+Thumbs.db
+
+# Development and project documents
+/DEV/
+/DOC/
+/bin/
+/tests/
+/AGENTS.MD
+/AGENTS.md
+/CLAUDE.MD
+/CLAUDE.md
+/README.md
+/SPEC.md
+
+# Dependencies and configuration for development (the plugin has no runtime dependencies)
+/vendor/
+/node_modules/
+/composer.json
+/composer.lock
+/phpcs.xml.dist
+/phpunit.xml
+/phpunit-integration.xml
+.phpunit.result.cache
+.distignore
+
+# Build output
+/dist/
+*.zip
+*.log

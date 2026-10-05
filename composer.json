@@ -28,6 +28,7 @@
 		"test:integration": "phpunit --configuration phpunit-integration.xml",
 		"i18n:pot": "wp i18n make-pot . languages/rag-interaction-logger-monitor.pot --slug=rag-interaction-logger-monitor --domain=rag-interaction-logger-monitor --exclude=vendor,tests,DEV,node_modules --skip-audit",
 		"i18n:mo": "wp i18n make-mo languages",
+		"build": "php bin/build-zip.php",
 		"test:all": [
 			"@test:unit",
 			"@test:integration"

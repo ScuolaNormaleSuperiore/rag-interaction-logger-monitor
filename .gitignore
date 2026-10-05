@@ -76,3 +76,5 @@ tmp-alm-php-path-test.php
 tmp/
 .agents
 skills-lock.json
+# Build output
+/dist/
