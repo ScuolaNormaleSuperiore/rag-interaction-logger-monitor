@@ -25,7 +25,6 @@ Thumbs.db
 /CLAUDE.MD
 /CLAUDE.md
 /README.md
-/SPEC.md
 
 # Dependencies and configuration for development (the plugin has no runtime dependencies)
 /vendor/
