@@ -1,30 +1,98 @@
 === RAG Interaction Logger Monitor ===
 Contributors: ict-sns
-Tags: rag, logs, monitoring, admin
+Tags: rag, logs, monitoring, chatbot, admin
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.3
 Stable tag: 0.1.0
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+License: GPLv3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Administrator-only monitor for RAG Interaction Logger data.
+Read-only dashboard, search and anomaly views for the interaction logs written by RAG Interaction Logger.
 
 == Description ==
 
-RAG Interaction Logger Monitor lets WordPress administrators inspect and analyse interaction logs from an external MySQL or MariaDB source.
+RAG Interaction Logger Monitor is an administrator-only backoffice for the data that the RAG Interaction Logger plugin writes to an external MySQL or MariaDB database. It never changes the logs: it only runs `SELECT` statements.
 
-The plugin has no frontend output, public REST API, shortcode, or block. The external database host, port, database, table, user and password are set on the plugin Settings page. The password is saved encrypted with a key derived from the security keys in `wp-config.php`, and is never shown again; it can alternatively be defined as the constant `ICT_RAG_MONITOR_DB_PASSWORD`, which takes precedence.
+**Pages**
+
+* **Dashboard** – turns, average and median duration, indicators (generated, fast reply, incomplete, blocked input and output, turns Guardrails did not handle, answers generated without recalled sources, turns that used tools), blocks by verdict, the use of each tool or form, and daily charts. A legend explains every indicator.
+* **Interactions** – a paginated list with filters (period, text search, Guardrails, verdicts, outcome, instance, user, tools and more) and sorting.
+* **Interaction detail** – every field of one interaction, with a comparison of the generated and delivered answers.
+* **Anomalies** – predefined views (incomplete turns, turns without Guardrails, blocks, answers changed without a verdict, empty recall, tools that ran in a risky turn), each with a count and a link to the filtered list.
+* **Settings** – the connection to the log database.
+
+**Good to know**
+
+* Only users with the `manage_options` capability can open the pages.
+* The plugin has no frontend output, shortcode, block or public REST endpoint.
+* The text you search for is sent in the request body and never appears in a URL.
+* Dates are shown, and periods are read, in the site time zone; the log stores UTC.
+* The interface follows each user's language. English and Italian are included. The logged data (questions, answers, verdicts) is never translated.
+
+**Requirements**
+
+* WordPress 7.1 or later, PHP 8.3 or later with the `sodium` extension.
+* RAG Interaction Logger writing to a MySQL or MariaDB table (by default `ril_interactions`).
+* A database account that can only `SELECT` from that table.
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/rag-interaction-logger-monitor` directory, or install the plugin through the WordPress plugins screen.
-2. Activate the plugin through the Plugins screen in WordPress.
-3. Make sure `wp-config.php` defines unique security keys (`SECURE_AUTH_KEY` and `SECURE_AUTH_SALT`), which WordPress installs normally do. Without them the password cannot be saved from the Settings page.
-4. Set the database host, port, database, table, user and password under Monitor RAG > Settings, or define `ICT_RAG_MONITOR_DB_PASSWORD` in `wp-config.php` instead of saving the password.
+1. Upload the plugin to `/wp-content/plugins/rag-interaction-logger-monitor`, or install it from the Plugins screen, and activate it.
+2. Create a database account with read-only access to the log table (example below), using the narrowest host you can instead of `%`.
+3. Set the connection under **Monitor RAG > Settings**, or define constants in `wp-config.php` (example below). A constant always takes precedence over the saved value.
+4. To save the password from the Settings page instead of using the constant, make sure `wp-config.php` defines unique `SECURE_AUTH_KEY` and `SECURE_AUTH_SALT`, as WordPress installs normally do.
+
+Read-only account:
+
+    CREATE USER 'rilm_reader'@'%' IDENTIFIED BY '<strong password>';
+    GRANT SELECT ON `rag-interaction-logger-db`.`ril_interactions` TO 'rilm_reader'@'%';
+
+Constants in `wp-config.php`:
+
+    define( 'ICT_RAG_MONITOR_DB_HOST', 'db.example.org' );
+    define( 'ICT_RAG_MONITOR_DB_PORT', 3306 ); // optional, default 3306
+    define( 'ICT_RAG_MONITOR_DB_NAME', 'rag-interaction-logger-db' ); // optional
+    define( 'ICT_RAG_MONITOR_DB_TABLE', 'ril_interactions' ); // optional
+    define( 'ICT_RAG_MONITOR_DB_USER', 'rilm_reader' );
+    define( 'ICT_RAG_MONITOR_DB_PASSWORD', '<password>' );
+
+== Frequently Asked Questions ==
+
+= Does the plugin change or delete my logs? =
+
+No. It opens its own connection to the log database and refuses any statement that is not a `SELECT`. Use an account that has only the `SELECT` privilege, so the database enforces the same rule.
+
+= Where is the database password stored? =
+
+Either in `wp-config.php` as `ICT_RAG_MONITOR_DB_PASSWORD`, or in the database of your site, encrypted with a key derived from your security keys. It is never shown again after saving. If those keys change, the saved password can no longer be read: type it again.
+
+= My database account requires SSL. How do I connect? =
+
+The plugin uses the TLS settings of your site's own database connection. Define `MYSQL_CLIENT_FLAGS` in `wp-config.php` (for example `MYSQLI_CLIENT_SSL`).
+
+= The Dashboard has no tools row, or the Interactions page has no tools filter. =
+
+Those features need the `tools_used` column, which older versions of RAG Interaction Logger do not create. Without the column they are hidden.
+
+= What happens if the log database is unreachable? =
+
+The plugin pages show a message and nothing else is affected: your site and its frontend keep working, and no connection detail is displayed.
+
+= Why does a tool count add up to more than the turns that used tools? =
+
+A turn that used several tools or forms is counted once in each of them.
+
+== Privacy ==
+
+The plugin shows, to administrators only, what the logger recorded: questions, answers, user identifiers and tool data. These are personal data of your visitors; decide who may be an administrator and for how long the logger keeps them. The plugin stores no interaction data in your WordPress database, sets no cookies and contacts no external service other than the log database you configure. It stores only the connection settings (and, if you choose, the encrypted password) in two options, which are removed when the plugin is deleted.
 
 == Changelog ==
 
 = 0.1.0 =
-* Initial project skeleton.
+* First version: Dashboard with indicator legend, Interactions list with filters and search, Interaction detail, Anomalies, tools and forms filters and figures, Settings with encrypted password, Italian translation.
 
+== Upgrade Notice ==
+
+= 0.1.0 =
+First version.
