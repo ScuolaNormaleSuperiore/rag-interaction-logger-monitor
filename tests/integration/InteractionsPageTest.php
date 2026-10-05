@@ -96,9 +96,10 @@ class InteractionsPageTest extends WP_UnitTestCase {
 	 * Creates a page on the fake reader, recording redirects instead of exiting.
 	 *
 	 * @param bool $available Whether the log database is usable.
+	 * @param string[] $columns   Optional columns present in the table.
 	 * @return Interactions_Page
 	 */
-	private function page( bool $available = true ): Interactions_Page {
+	private function page( bool $available = true, array $columns = array() ): Interactions_Page {
 		$repository = $available ? new Interaction_Repository(
 			$this->reader,
 			new Config(
@@ -107,7 +108,8 @@ class InteractionsPageTest extends WP_UnitTestCase {
 					'user'     => 'reader',
 					'password' => 'secret',
 				)
-			)
+			),
+			$columns
 		) : null;
 
 		return new class( null, static function () use ( $repository ) {
@@ -391,6 +393,174 @@ class InteractionsPageTest extends WP_UnitTestCase {
 			$this->assertStringNotContainsString( 'id="rilm-' . $name . '"', $before, $name );
 			$this->assertStringNotContainsString( 'id="rilm-' . $name . '"', $after, $name );
 		}
+	}
+
+	/**
+	 * Loads the rows the page asks for when the table has the tools column: the page, then the tool names.
+	 *
+	 * @param array $names Rows of the per-tool query.
+	 * @return void
+	 */
+	private function load_tool_names( array $names = array() ): void {
+		$this->reader->rows = array( array( $this->row() ), $names );
+	}
+
+	/**
+	 * With the tools column, "Tools used" is among the always visible filters and the tool name is in the advanced section.
+	 *
+	 * @return void
+	 */
+	public function test_tools_controls_with_the_column(): void {
+		$this->load_tool_names();
+
+		list( $before, $inside, $after ) = $this->split_advanced( $this->render( $this->page( true, array( 'tools_used' ) ) ) );
+
+		$this->assertStringContainsString( 'id="rilm-tools"', $before );
+		$this->assertStringContainsString( '<label for="rilm-tools">Tools used</label>', $before );
+		$this->assertStringNotContainsString( 'id="rilm-tools"', $inside . $after );
+		$this->assertStringContainsString( 'id="rilm-tool"', $inside );
+		$this->assertStringContainsString( '<label for="rilm-tool">Tool</label>', $inside );
+		$this->assertStringNotContainsString( 'id="rilm-tool"', $before . $after );
+	}
+
+	/**
+	 * Without the column neither control exists and no query mentions it.
+	 *
+	 * @return void
+	 */
+	public function test_no_tools_controls_without_the_column(): void {
+		$this->reader->rows = array( array( $this->row() ) );
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringNotContainsString( 'rilm-tools', $output );
+		$this->assertStringNotContainsString( 'id="rilm-tool"', $output );
+		$this->assertStringNotContainsString( 'tools_used', implode( "\n", $this->reader->queries ) );
+	}
+
+	/**
+	 * The tool selector offers the names found in the period, in alphabetical order, with an "All" entry.
+	 *
+	 * @return void
+	 */
+	public function test_tool_selector_lists_the_names_of_the_period(): void {
+		$this->load_tool_names(
+			array(
+				array(
+					'names' => 'search, calendar',
+					'turns' => '5',
+				),
+				array(
+					'names' => 'Form_Contact',
+					'turns' => '9',
+				),
+			)
+		);
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		preg_match( '/<select id="rilm-tool" name="tool">(.*?)<\/select>/s', $output, $match );
+
+		$this->assertMatchesRegularExpression( '/^<option value=""[^>]*>All<\/option><option value="calendar"[^>]*>calendar<\/option><option value="Form_Contact"[^>]*>Form_Contact<\/option><option value="search"[^>]*>search<\/option>$/', $match[1] ?? '' );
+	}
+
+	/**
+	 * The yes/no choice and the name are both read from the URL, kept selected and applied.
+	 *
+	 * @return void
+	 */
+	public function test_tools_filters_are_applied_and_kept(): void {
+		$_GET = array(
+			'tools' => 'yes',
+			'tool'  => 'search',
+		);
+
+		$this->load_tool_names(
+			array(
+				array(
+					'names' => 'search',
+					'turns' => '1',
+				),
+			)
+		);
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertMatchesRegularExpression( '/<option value="yes"\s+selected=\'selected\'>Yes<\/option>/', $output );
+		$this->assertMatchesRegularExpression( '/<option value="search"\s+selected=\'selected\'>search<\/option>/', $output );
+		$this->assertStringContainsString( "CONCAT( ',', REPLACE( tools_used, ', ', ',' ), ',' ) LIKE '%,search,%'", implode( "\n", $this->reader->queries ) );
+	}
+
+	/**
+	 * A tool name in the URL opens the advanced section and counts as one active filter; the yes/no choice does not.
+	 *
+	 * @return void
+	 */
+	public function test_tool_name_opens_the_advanced_section(): void {
+		$_GET = array( 'tool' => 'search' );
+		$this->load_tool_names();
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringContainsString( '<details class="rilm-advanced" open>', $output );
+		$this->assertStringContainsString( 'Advanced filters (1 active)', $output );
+
+		$_GET = array( 'tools' => 'no' );
+		$this->load_tool_names();
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringContainsString( '<details class="rilm-advanced">', $output );
+		$this->assertStringNotContainsString( 'active)', $output );
+	}
+
+	/**
+	 * A selected name that the period does not contain stays selectable, so the filter does not vanish.
+	 *
+	 * @return void
+	 */
+	public function test_unknown_tool_stays_in_the_selector(): void {
+		$_GET = array( 'tool' => 'old_tool' );
+		$this->load_tool_names();
+
+		$this->assertStringContainsString( '<option value="old_tool"', $this->render( $this->page( true, array( 'tools_used' ) ) ) );
+	}
+
+	/**
+	 * An invalid yes/no value is reported by name.
+	 *
+	 * @return void
+	 */
+	public function test_invalid_tools_value_is_reported(): void {
+		$_GET = array( 'tools' => 'maybe' );
+		$this->load_tool_names();
+
+		$this->assertStringContainsString(
+			'These filters were ignored because their value is not valid: Tools used.',
+			$this->render( $this->page( true, array( 'tools_used' ) ) )
+		);
+	}
+
+	/**
+	 * The filters survive the redirect that follows a search form with an empty search.
+	 *
+	 * @return void
+	 */
+	public function test_tools_filters_are_kept_in_the_redirect(): void {
+		$page = $this->page( true, array( 'tools_used' ) );
+
+		$this->post(
+			array(
+				'tools'  => 'yes',
+				'tool'   => 'search',
+				'search' => '',
+			)
+		);
+
+		$page->handle_request();
+
+		$this->assertStringContainsString( 'tools=yes', (string) $page->redirected );
+		$this->assertStringContainsString( 'tool=search', (string) $page->redirected );
 	}
 
 	/**

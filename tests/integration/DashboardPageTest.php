@@ -11,6 +11,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use RILM\Admin\Bar_Chart;
 use RILM\Admin\Dashboard_Page;
+use RILM\Admin\Indicator_Texts;
 use RILM\Config\Config;
 use RILM\Repository\Filters;
 use RILM\Repository\Interaction_Repository;
@@ -121,9 +122,10 @@ class DashboardPageTest extends WP_UnitTestCase {
 	 * Creates the page on the fake reader.
 	 *
 	 * @param bool $available Whether the log database is usable.
+	 * @param string[] $columns   Optional columns present in the table.
 	 * @return Dashboard_Page
 	 */
-	private function page( bool $available = true ): Dashboard_Page {
+	private function page( bool $available = true, array $columns = array() ): Dashboard_Page {
 		$repository = $available ? new Interaction_Repository(
 			$this->reader,
 			new Config(
@@ -132,7 +134,8 @@ class DashboardPageTest extends WP_UnitTestCase {
 					'user' => 'reader',
 				),
 				array( 'password' => 'secret' )
-			)
+			),
+			$columns
 		) : null;
 
 		return new Dashboard_Page(
@@ -216,7 +219,7 @@ class DashboardPageTest extends WP_UnitTestCase {
 		$this->assertMatchesRegularExpression( '/<th scope="row">Incomplete<\/th><td><a[^>]*>20[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>10\.0% of all turns<\/td>/', $output );
 		$this->assertMatchesRegularExpression( '/<th scope="row">Input blocked<\/th><td><a[^>]*>8[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>4\.0% of all turns<\/td>/', $output );
 		$this->assertMatchesRegularExpression( '/<th scope="row">Output blocked<\/th><td><a[^>]*>4[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>2\.0% of all turns<\/td>/', $output );
-		$this->assertMatchesRegularExpression( '/<th scope="row">Guardrails did not run<\/th><td><a[^>]*>10[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>5\.0% of all turns<\/td>/', $output );
+		$this->assertMatchesRegularExpression( '/<th scope="row">Guardrails did not handle the turn<\/th><td><a[^>]*>10[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>5\.0% of all turns<\/td>/', $output );
 		$this->assertMatchesRegularExpression( '/<th scope="row">Generated without recalled sources<\/th><td><a[^>]*>15[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>10\.0% of generated answers<\/td>/', $output );
 	}
 
@@ -395,7 +398,7 @@ class DashboardPageTest extends WP_UnitTestCase {
 
 		$output = $this->render( $this->page() );
 
-		$this->assertMatchesRegularExpression( '/Guardrails did not run<\/th><td><a[^>]*>0[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>0\.0% of all turns<\/td>/', $output );
+		$this->assertMatchesRegularExpression( '/Guardrails did not handle the turn<\/th><td><a[^>]*>0[^<]*<span[^>]*>[^<]*<\/span><\/a><\/td><td>0\.0% of all turns<\/td>/', $output );
 	}
 
 	/**
@@ -533,6 +536,322 @@ class DashboardPageTest extends WP_UnitTestCase {
 
 		$this->assertSame( 1, substr_count( $output, '<th scope="row">2026-10-02</th>' ) );
 		$this->assertStringNotContainsString( '<th scope="row">2026-10-01</th>', $output );
+	}
+
+	/**
+	 * A legend under the indicators table explains every indicator.
+	 *
+	 * @return void
+	 */
+	public function test_legend_explains_every_indicator(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '<h3 id="rilm-indicators-legend">What the indicators mean</h3>', $output );
+		$this->assertStringContainsString( '<dl class="rilm-legend-list" aria-labelledby="rilm-indicators-legend">', $output );
+		$this->assertSame( 7, substr_count( $output, '<dt>' ) );
+
+		foreach ( Indicator_Texts::dashboard_keys() as $key ) {
+			$this->assertStringContainsString( '<dt>' . esc_html( Indicator_Texts::label( $key ) ) . '</dt>', $output, $key );
+			$this->assertStringContainsString( esc_html( Indicator_Texts::description( $key ) ), $output, $key );
+		}
+	}
+
+	/**
+	 * The legend comes after the indicators table and before the verdict tables.
+	 *
+	 * @return void
+	 */
+	public function test_legend_follows_the_indicators_table(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$table   = strpos( $output, '</table>', (int) strpos( $output, 'rilm-indicators-table' ) );
+		$legend  = strpos( $output, 'rilm-indicators-legend' );
+		$verdict = strpos( $output, 'Blocks by verdict' );
+
+		$this->assertTrue( $table < $legend && $legend < $verdict );
+	}
+
+	/**
+	 * Each legend entry has the name of a row of the table.
+	 *
+	 * @return void
+	 */
+	public function test_legend_names_match_the_table_rows(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		foreach ( Indicator_Texts::dashboard_keys() as $key ) {
+			$label = esc_html( Indicator_Texts::label( $key ) );
+
+			$this->assertStringContainsString( '<th scope="row">' . $label . '</th>', $output, $key );
+			$this->assertStringContainsString( '<dt>' . $label . '</dt>', $output, $key );
+		}
+	}
+
+	/**
+	 * The legend says what each share is taken of: all turns, or the generated answers for recall.
+	 *
+	 * @return void
+	 */
+	public function test_legend_states_the_denominator_of_each_share(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertSame( 6, substr_count( $output, 'The share is taken of all the turns of the period.' ) );
+		$this->assertSame( 1, substr_count( $output, 'The share is taken of the generated answers.' ) );
+		$this->assertMatchesRegularExpression( '/<dt>Generated without recalled sources<\/dt><dd>[^<]*The share is taken of the generated answers\.<\/dd>/', $output );
+	}
+
+	/**
+	 * The Guardrails entry uses the cautious wording, in the legend and in the table.
+	 *
+	 * @return void
+	 */
+	public function test_guardrails_wording(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( 'Guardrails did not handle the turn', $output );
+		$this->assertStringNotContainsString( 'Guardrails did not run', $output );
+		$this->assertStringContainsString( 'left no mark on the turn', $output );
+		$this->assertStringContainsString( 'verdicts are always empty', $output );
+	}
+
+	/**
+	 * With no turns the table is shown, so the legend is too.
+	 *
+	 * @return void
+	 */
+	public function test_legend_is_shown_for_an_empty_period(): void {
+		$this->load(
+			array(
+				'total'         => '0',
+				'generated'     => null,
+				'fast_reply'    => null,
+				'incomplete'    => null,
+				'no_guardrails' => null,
+				'input_blocks'  => null,
+				'output_blocks' => null,
+				'zero_recall'   => null,
+				'completed'     => null,
+				'average_ms'    => null,
+			)
+		);
+
+		$this->assertStringContainsString( 'What the indicators mean', $this->render( $this->page() ) );
+	}
+
+	/**
+	 * Without the table there is nothing to explain.
+	 *
+	 * @return void
+	 */
+	public function test_no_legend_without_the_table(): void {
+		$this->assertStringNotContainsString( 'What the indicators mean', $this->render( $this->page( false ) ) );
+
+		$this->reader->rows = array( array() );
+
+		$this->assertStringNotContainsString( 'What the indicators mean', $this->render( $this->page() ) );
+	}
+
+	/**
+	 * Loads the answers of a period for a table that has the tools column.
+	 *
+	 * @param array $summary Values replacing the default summary (`tools` is added).
+	 * @param array $tools   Rows of the per-tool query: combination and turns.
+	 * @return void
+	 */
+	private function load_with_tools( array $summary = array(), array $tools = array() ): void {
+		$this->load( $summary + array( 'tools' => '50' ) );
+
+		// The per-tool query comes after the two verdict queries and before the hourly one.
+		array_splice( $this->reader->rows, 3, 0, array( $tools ) );
+	}
+
+	/**
+	 * With the column, the indicators table has a row for turns that used tools, with a count, a share and a link.
+	 *
+	 * @return void
+	 */
+	public function test_tools_row_is_shown_with_the_column(): void {
+		$this->load_with_tools(
+			array(),
+			array(
+				array(
+					'names' => 'search',
+					'turns' => '50',
+				),
+			)
+		);
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertMatchesRegularExpression( '/<th scope="row">Turns that used tools<\/th><td><a href="[^"]*tools=yes[^"]*">50<span[^>]*> \(Turns that used tools\)<\/span><\/a><\/td><td>25.0% of all turns<\/td>/', $output );
+		$this->assertContains( 'yes', array_column( $this->list_links( $output ), 'tools' ) );
+	}
+
+	/**
+	 * The legend explains the tools row, and says a tool also means a form.
+	 *
+	 * @return void
+	 */
+	public function test_legend_explains_the_tools_row(): void {
+		$this->load_with_tools();
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertSame( 8, substr_count( $output, '<dt>' ) );
+		$this->assertStringContainsString( '<dt>Turns that used tools</dt>', $output );
+		$this->assertStringContainsString( esc_html( Indicator_Texts::description( 'tools' ) ), $output );
+		$this->assertStringContainsString( 'here a tool also means a form', $output );
+	}
+
+	/**
+	 * The table of tools lists each name with its turns and a link that reopens the list on that tool.
+	 *
+	 * @return void
+	 */
+	public function test_tools_table_has_a_link_per_tool(): void {
+		$this->load_with_tools(
+			array(),
+			array(
+				array(
+					'names' => 'search, form_contact',
+					'turns' => '30',
+				),
+				array(
+					'names' => 'search',
+					'turns' => '10',
+				),
+			)
+		);
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringContainsString( '<h2>Tools and forms</h2>', $output );
+		$this->assertMatchesRegularExpression( '/<th scope="row">search<\/th><td><a href="[^"]*tool=search[^"]*">40</', $output );
+		$this->assertMatchesRegularExpression( '/<th scope="row">form_contact<\/th><td><a href="[^"]*tool=form_contact[^"]*">30</', $output );
+		$this->assertStringContainsString( 'counted in each of them', $output );
+		$this->assertStringNotContainsString( 'counts below are partial', $output );
+	}
+
+	/**
+	 * Tool names come from the log: they are escaped in the page and in the link.
+	 *
+	 * @return void
+	 */
+	public function test_tool_names_are_escaped(): void {
+		$this->load_with_tools(
+			array(),
+			array(
+				array(
+					'names' => '<script>alert(1)</script>',
+					'turns' => '5',
+				),
+			)
+		);
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringNotContainsString( '<script>', $output );
+		$this->assertStringContainsString( '&lt;script&gt;alert(1)&lt;/script&gt;', $output );
+		$this->assertContains( '<script>alert(1)</script>', array_column( $this->list_links( $output ), 'tool' ) );
+	}
+
+	/**
+	 * A name with characters that mean something in a URL still opens the list on exactly that name.
+	 *
+	 * @return void
+	 */
+	public function test_tool_names_with_url_characters_survive_the_link(): void {
+		$name = 'a&b=c d#e+f';
+
+		$this->load_with_tools(
+			array(),
+			array(
+				array(
+					'names' => $name,
+					'turns' => '5',
+				),
+			)
+		);
+
+		$links = $this->list_links( $this->render( $this->page( true, array( 'tools_used' ) ) ) );
+
+		$this->assertContains( $name, array_column( $links, 'tool' ) );
+	}
+
+	/**
+	 * Too many combinations: the table says its counts are partial.
+	 *
+	 * @return void
+	 */
+	public function test_tools_table_warns_when_partial(): void {
+		$rows = array();
+
+		for ( $i = 0; $i <= 500; $i++ ) {
+			$rows[] = array(
+				'names' => 'tool_' . $i,
+				'turns' => '1',
+			);
+		}
+
+		$this->load_with_tools( array(), $rows );
+
+		$this->assertStringContainsString( 'counts below are partial', $this->render( $this->page( true, array( 'tools_used' ) ) ) );
+	}
+
+	/**
+	 * No turn used tools: the row shows zero and the table says so instead of listing nothing.
+	 *
+	 * @return void
+	 */
+	public function test_no_tool_turns(): void {
+		$this->load( array( 'tools' => '0' ) );
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertMatchesRegularExpression( '/<th scope="row">Turns that used tools<\/th><td><a [^>]*>0</', $output );
+		$this->assertStringContainsString( 'No tool or form ran in this period.', $output );
+		$this->assertStringNotContainsString( 'rilm-tools-table', $output );
+	}
+
+	/**
+	 * A failed per-tool query is reported, and the rest of the page is still shown.
+	 *
+	 * @return void
+	 */
+	public function test_failed_tools_query_is_reported(): void {
+		$this->load_with_tools();
+		$this->reader->rows[3] = false;
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringContainsString( 'The tools could not be loaded.', $output );
+		$this->assertStringContainsString( 'Turns that used tools', $output );
+	}
+
+	/**
+	 * Without the column there is no row, no table, no legend entry and no query on it.
+	 *
+	 * @return void
+	 */
+	public function test_nothing_about_tools_without_the_column(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringNotContainsString( 'Turns that used tools', $output );
+		$this->assertStringNotContainsString( 'Tools and forms', $output );
+		$this->assertSame( 7, substr_count( $output, '<dt>' ) );
+		$this->assertStringNotContainsString( 'tools_used', implode( "\n", $this->reader->queries ) );
 	}
 
 	/**

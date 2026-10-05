@@ -46,7 +46,7 @@ class Interactions_Page {
 	/**
 	 * Names of the filter fields, read from GET or POST.
 	 */
-	private const FILTER_KEYS = array( 'period', 'from', 'to', 'outcome', 'instance', 'user_id', 'guard', 'input_verdict', 'output_verdict', 'other_reply', 'recall', 'answers', 'orderby', 'order', 'per_page', 'paged' );
+	private const FILTER_KEYS = array( 'period', 'from', 'to', 'outcome', 'instance', 'user_id', 'guard', 'input_verdict', 'output_verdict', 'other_reply', 'tools', 'tool', 'recall', 'answers', 'orderby', 'order', 'per_page', 'paged' );
 
 	/**
 	 * Connection to the log database.
@@ -253,7 +253,7 @@ class Interactions_Page {
 	 */
 	private function page_url( array $args ): string {
 		return add_query_arg(
-			array( 'page' => Menu::SLUG_INTERACTIONS ) + $args,
+			urlencode_deep( array( 'page' => Menu::SLUG_INTERACTIONS ) + $args ),
 			admin_url( 'admin.php' )
 		);
 	}
@@ -274,6 +274,7 @@ class Interactions_Page {
 			'outcome'     => __( 'Outcome', 'rag-interaction-logger-monitor' ),
 			'guard'       => __( 'Guardrails', 'rag-interaction-logger-monitor' ),
 			'other_reply' => __( 'Other plugin reply', 'rag-interaction-logger-monitor' ),
+			'tools'       => __( 'Tools used', 'rag-interaction-logger-monitor' ),
 			'orderby'     => __( 'Sort by', 'rag-interaction-logger-monitor' ),
 		);
 
@@ -306,10 +307,18 @@ class Interactions_Page {
 	 * @return void
 	 */
 	private function render_filters( Filters $filters, Interaction_Repository $repository ): void {
-		$period    = $filters->period();
-		$instances = $repository->distinct_values( 'instance', $period );
-		$inputs    = $repository->distinct_values( 'input_verdict', $period );
-		$outputs   = $repository->distinct_values( 'output_verdict', $period );
+		$period     = $filters->period();
+		$instances  = $repository->distinct_values( 'instance', $period );
+		$inputs     = $repository->distinct_values( 'input_verdict', $period );
+		$outputs    = $repository->distinct_values( 'output_verdict', $period );
+		$with_tools = $repository->supports_tools();
+		$tool_names = array();
+
+		if ( $with_tools ) {
+			$found      = $repository->tool_counts( $period );
+			$tool_names = null === $found ? array() : array_map( 'strval', array_keys( $found['counts'] ) );
+			sort( $tool_names, SORT_STRING | SORT_FLAG_CASE );
+		}
 		?>
 		<div class="rilm-filters">
 			<?php
@@ -327,7 +336,20 @@ class Interactions_Page {
 			);
 			$this->field_select( 'input_verdict', __( 'Input verdict', 'rag-interaction-logger-monitor' ), $this->verdict_options( $inputs, (string) $filters->input_verdict() ), (string) $filters->input_verdict() );
 
-			$this->render_advanced_filters( $filters, $instances, $outputs );
+			if ( $with_tools ) {
+				$this->field_select(
+					'tools',
+					__( 'Tools used', 'rag-interaction-logger-monitor' ),
+					array(
+						''                 => __( 'All', 'rag-interaction-logger-monitor' ),
+						Filters::TOOLS_YES => __( 'Yes', 'rag-interaction-logger-monitor' ),
+						Filters::TOOLS_NO  => __( 'No', 'rag-interaction-logger-monitor' ),
+					),
+					(string) $filters->tools()
+				);
+			}
+
+			$this->render_advanced_filters( $filters, $instances, $outputs, $with_tools ? $tool_names : null );
 			?>
 			<p class="rilm-filter-actions">
 				<?php submit_button( __( 'Apply filters', 'rag-interaction-logger-monitor' ), 'primary', 'rilm_apply', false ); ?>
@@ -347,12 +369,13 @@ class Interactions_Page {
 	 * or the page size is not the default, so nothing that changes the rows or their order
 	 * stays hidden. Its fields belong to the same form: a closed section still submits them.
 	 *
-	 * @param Filters  $filters   Filters of the request.
-	 * @param string[] $instances Instances found in the period.
-	 * @param string[] $outputs   Output verdicts found in the period.
+	 * @param Filters       $filters   Filters of the request.
+	 * @param string[]      $instances Instances found in the period.
+	 * @param string[]      $outputs   Output verdicts found in the period.
+	 * @param string[]|null $tools Tool names found in the period; null when the table has no tools column.
 	 * @return void
 	 */
-	private function render_advanced_filters( Filters $filters, array $instances, array $outputs ): void {
+	private function render_advanced_filters( Filters $filters, array $instances, array $outputs, ?array $tools ): void {
 		$active = $filters->advanced_count();
 		$open   = $active > 0 || $filters->has_custom_view();
 		$title  = $active > 0
@@ -392,6 +415,9 @@ class Interactions_Page {
 					),
 					(string) $filters->other_reply()
 				);
+				if ( null !== $tools ) {
+					$this->field_select( 'tool', __( 'Tool', 'rag-interaction-logger-monitor' ), $this->value_options( $tools, (string) $filters->tool() ), (string) $filters->tool() );
+				}
 				?>
 				<p class="rilm-field">
 					<input type="checkbox" id="rilm-recall" name="recall" value="empty"<?php checked( $filters->recall_empty() ); ?> />

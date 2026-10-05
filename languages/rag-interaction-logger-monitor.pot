@@ -1,0 +1,952 @@
+# Copyright (C) 2026 ICT SNS
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: RAG Interaction Logger Monitor 0.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/rag-interaction-logger-monitor\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-05T10:11:26+02:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: rag-interaction-logger-monitor\n"
+
+#. Plugin Name of the plugin
+#: rag-interaction-logger-monitor.php:3
+msgid "RAG Interaction Logger Monitor"
+msgstr ""
+
+#. Plugin URI of the plugin
+#. Author URI of the plugin
+#: rag-interaction-logger-monitor.php:4
+#: rag-interaction-logger-monitor.php:10
+msgid "https://ict.sns.it"
+msgstr ""
+
+#. Description of the plugin
+#: rag-interaction-logger-monitor.php:5
+msgid "Administrator-only monitor for RAG Interaction Logger data."
+msgstr ""
+
+#. Author of the plugin
+#: rag-interaction-logger-monitor.php:9
+msgid "ICT SNS"
+msgstr ""
+
+#: includes/admin/class-access.php:41
+msgid "Sorry, you are not allowed to access this page."
+msgstr ""
+
+#: includes/admin/class-anomalies-page.php:84
+#: includes/admin/class-menu.php:138
+msgid "Anomalies"
+msgstr ""
+
+#. translators: %s: time zone name, e.g. "Europe/Rome".
+#: includes/admin/class-anomalies-page.php:90
+#, php-format
+msgid "Counts are for the chosen period, read in the site time zone: %s."
+msgstr ""
+
+#: includes/admin/class-anomalies-page.php:110
+#: includes/admin/class-dashboard-page.php:109
+#: includes/admin/class-detail-page.php:79
+#: includes/admin/class-interactions-page.php:162
+msgid "The interaction log is not available. See the notice above."
+msgstr ""
+
+#: includes/admin/class-anomalies-page.php:186
+#: includes/admin/class-dashboard-page.php:203
+msgid "Apply period"
+msgstr ""
+
+#: includes/admin/class-anomalies-page.php:207
+msgid "The counts could not be loaded."
+msgstr ""
+
+#. translators: %s: number of interactions.
+#: includes/admin/class-anomalies-page.php:221
+#, php-format
+msgid "%s interaction in the period."
+msgid_plural "%s interactions in the period."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-anomalies-page.php:230
+msgid "Anomaly"
+msgstr ""
+
+#: includes/admin/class-anomalies-page.php:231
+#: includes/admin/class-dashboard-page.php:303
+#: includes/admin/class-dashboard-page.php:375
+#: includes/admin/class-interactions-page.php:145
+#: includes/admin/class-menu.php:127
+msgid "Interactions"
+msgstr ""
+
+#: includes/admin/class-anomalies-page.php:232
+msgid "List"
+msgstr ""
+
+#: includes/admin/class-anomalies-page.php:246
+msgid "View interactions"
+msgstr ""
+
+#. translators: %s: name of the anomaly.
+#: includes/admin/class-anomalies-page.php:250
+#, php-format
+msgid "(%s)"
+msgstr ""
+
+#. translators: 1: number of days, 2: highest value of a day.
+#: includes/admin/class-bar-chart.php:81
+#, php-format
+msgid "Bar chart of %1$s day. The highest value is %2$s. The same numbers are in the table below."
+msgid_plural "Bar chart of %1$s days. The highest value is %2$s. The same numbers are in the table below."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-dashboard-page.php:83
+#: includes/admin/class-menu.php:119
+#: includes/admin/class-menu.php:120
+msgid "Dashboard"
+msgstr ""
+
+#. translators: %s: time zone name, e.g. "Europe/Rome".
+#: includes/admin/class-dashboard-page.php:89
+#, php-format
+msgid "Figures are for the chosen period, read in the site time zone: %s."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:116
+msgid "The figures could not be loaded."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:162
+msgid "Not available"
+msgstr ""
+
+#. translators: %s: duration in milliseconds.
+#: includes/admin/class-dashboard-page.php:167
+#: includes/admin/class-detail-page.php:170
+#: includes/admin/class-interactions-list-table.php:302
+#, php-format
+msgid "%s ms"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:242
+#: includes/admin/class-dashboard-page.php:514
+#: includes/admin/class-dashboard-page.php:554
+msgid "Turns"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:243
+msgid "(view the interactions)"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:246
+msgid "Average duration of completed turns"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:250
+msgid "Median duration of completed turns"
+msgstr ""
+
+#. translators: %s: number of completed turns.
+#: includes/admin/class-dashboard-page.php:259
+#, php-format
+msgid "Completed turns: %s. A turn is completed when it is not incomplete and its duration is recorded."
+msgid_plural "Completed turns: %s. A turn is completed when it is not incomplete and its duration is recorded."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-dashboard-page.php:298
+msgid "Indicators"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:302
+msgid "Indicator"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:304
+msgid "Share"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:322
+msgid "Not available: no turns to compare with."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:346
+msgid "Tools and forms"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:350
+msgid "The tools could not be loaded."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:357
+msgid "No tool or form ran in this period."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:362
+msgid "A turn that used several tools is counted in each of them, so the counts can add up to more than the turns that used tools."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:366
+msgid "There are too many different combinations of tools in this period: the counts below are partial. Choose a shorter period."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:374
+msgid "Tool or form"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:404
+msgid "What the indicators mean"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:429
+msgid "Blocks by verdict"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:432
+msgid "Input verdicts"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:433
+msgid "Output verdicts"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:454
+msgid "Verdict"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:455
+msgid "Blocks"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:461
+msgid "No blocks recorded in the period."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:486
+msgid "Daily trend"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:490
+msgid "The daily figures could not be loaded."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:497
+msgid "No turns in the period."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:510
+msgid "Turns per day"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:521
+msgid "Incomplete turns per day"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:525
+#: includes/admin/class-dashboard-page.php:555
+#: includes/admin/class-detail-page.php:313
+#: includes/admin/class-indicator-texts.php:130
+#: includes/admin/class-interactions-list-table.php:282
+#: includes/admin/class-interactions-page.php:400
+msgid "Incomplete"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:532
+msgid "Blocks per day"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:536
+#: includes/admin/class-dashboard-page.php:556
+#: includes/admin/class-indicator-texts.php:132
+msgid "Input blocked"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:540
+#: includes/admin/class-dashboard-page.php:557
+#: includes/admin/class-indicator-texts.php:134
+msgid "Output blocked"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:547
+msgid "A turn blocked on both input and output counts in both series of the third chart."
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:549
+msgid "Show the daily figures as a table"
+msgstr ""
+
+#: includes/admin/class-dashboard-page.php:553
+msgid "Day"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:70
+msgid "Interaction details"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:72
+msgid "Back to the interactions list"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:87
+msgid "Interaction not found."
+msgstr ""
+
+#: includes/admin/class-detail-page.php:138
+#: includes/admin/class-interactions-list-table.php:147
+msgid "Question"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:139
+#: includes/admin/class-detail-page.php:257
+msgid "Generated answer"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:140
+#: includes/admin/class-detail-page.php:258
+#: includes/admin/class-interactions-list-table.php:148
+msgid "Delivered answer"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:155
+msgid "ID"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:156
+msgid "Date and time (UTC)"
+msgstr ""
+
+#. translators: %s: time zone name, e.g. "Europe/Rome".
+#: includes/admin/class-detail-page.php:159
+#, php-format
+msgid "Date and time (%s)"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:162
+#: includes/admin/class-interactions-list-table.php:141
+#: includes/admin/class-interactions-page.php:404
+#: includes/admin/class-interactions-page.php:437
+msgid "Instance"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:163
+#: includes/admin/class-interactions-list-table.php:142
+#: includes/admin/class-interactions-page.php:438
+msgid "User"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:164
+msgid "Turn ID"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:165
+#: includes/admin/class-interactions-list-table.php:140
+#: includes/admin/class-interactions-page.php:274
+#: includes/admin/class-interactions-page.php:395
+#: includes/admin/class-interactions-page.php:436
+msgid "Outcome"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:166
+#: includes/admin/class-interactions-list-table.php:143
+#: includes/admin/class-interactions-page.php:439
+msgid "Duration"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:167
+#: includes/admin/class-detail-page.php:180
+#: includes/admin/class-detail-page.php:183
+#: includes/admin/class-detail-page.php:211
+#: includes/admin/class-detail-page.php:297
+#: includes/admin/class-detail-page.php:337
+#: includes/admin/class-interactions-list-table.php:449
+#: includes/admin/class-interactions-page.php:414
+msgid "Not recorded"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:173
+#: includes/admin/class-interactions-list-table.php:144
+#: includes/admin/class-interactions-page.php:275
+#: includes/admin/class-interactions-page.php:329
+msgid "Guardrails"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:174
+#: includes/admin/class-interactions-list-table.php:316
+#: includes/admin/class-interactions-page.php:332
+msgid "Present"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:175
+#: includes/admin/class-interactions-list-table.php:317
+#: includes/admin/class-interactions-page.php:333
+msgid "Absent"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:176
+#: includes/admin/class-interactions-list-table.php:145
+#: includes/admin/class-interactions-page.php:337
+msgid "Input verdict"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:177
+#: includes/admin/class-interactions-list-table.php:146
+#: includes/admin/class-interactions-page.php:406
+msgid "Output verdict"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:178
+#: includes/admin/class-interactions-page.php:276
+#: includes/admin/class-interactions-page.php:409
+msgid "Other plugin reply"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:179
+msgid "Recalled sources"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:182
+msgid "Best recall score"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:216
+#: includes/admin/class-interactions-list-table.php:466
+msgid "(empty)"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:237
+msgid "Comparison of the generated and delivered answers"
+msgstr ""
+
+#. translators: %s: number of characters.
+#: includes/admin/class-detail-page.php:243
+#, php-format
+msgid "The comparison is not available for texts longer than %s characters: the full texts are shown above."
+msgstr ""
+
+#: includes/admin/class-detail-page.php:250
+msgid "The answers differ. Changed lines are highlighted."
+msgstr ""
+
+#: includes/admin/class-detail-page.php:271
+#: includes/admin/class-interactions-page.php:277
+#: includes/admin/class-interactions-page.php:342
+msgid "Tools used"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:272
+msgid "Tool input"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:273
+msgid "Tool output"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:274
+msgid "Recall sources"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:309
+#: includes/admin/class-indicator-texts.php:126
+#: includes/admin/class-interactions-list-table.php:278
+#: includes/admin/class-interactions-page.php:398
+msgid "Generated"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:311
+#: includes/admin/class-indicator-texts.php:128
+#: includes/admin/class-interactions-list-table.php:280
+#: includes/admin/class-interactions-page.php:399
+msgid "Fast reply"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:326
+msgid "None (no block recorded)"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:340
+#: includes/admin/class-interactions-page.php:412
+msgid "Replied"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:340
+#: includes/admin/class-interactions-page.php:413
+msgid "Did not reply"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:136
+msgid "Guardrails did not handle the turn"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:138
+msgid "Generated without recalled sources"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:140
+msgid "Answer changed without an output verdict"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:142
+msgid "Turns that used tools"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:144
+msgid "Tools ran but the turn is incomplete"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:146
+msgid "Tools ran without Guardrails"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:148
+msgid "Tools ran and the output was blocked"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:164
+msgid "Incomplete interactions"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:177
+msgid "The language model produced the answer."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:179
+msgid "Another plugin answered the question before the language model was asked."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:181
+msgid "The turn started and never finished."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:183
+msgid "Guardrails recorded a verdict on the question: a block was recorded."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:185
+msgid "Guardrails recorded a verdict on the answer: a block was recorded."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:187
+msgid "The rag-guardrails plugin left no mark on the turn: it was not installed or not active, or it did not handle that turn. In these turns the verdicts are always empty, so they cannot show blocks."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:189
+msgid "A generated answer for which no source was recalled."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:191
+msgid "The delivered answer differs from the generated one, but no output verdict explains it."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:193
+msgid "At least one tool ran during the turn; here a tool also means a form. A turn that used several is counted once in this row and once for each of them in the table of tools and forms, so the counts of that table can add up to more than this row."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:195
+msgid "At least one tool or form ran, but the turn started and never finished."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:197
+msgid "At least one tool or form ran in a turn Guardrails did not handle. The input and the results of tools are not checked by any guard, so these turns had no check at all."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:199
+msgid "At least one tool or form ran and Guardrails recorded a verdict on the answer: a block was recorded."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:213
+msgid "of generated answers"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:214
+msgid "of all turns"
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:225
+msgid "The share is taken of the generated answers."
+msgstr ""
+
+#: includes/admin/class-indicator-texts.php:226
+msgid "The share is taken of all the turns of the period."
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:139
+#: includes/admin/class-interactions-page.php:435
+msgid "Date and time"
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:186
+msgid "No interactions found for the selected period and filters."
+msgstr ""
+
+#. translators: %s: number of interactions.
+#: includes/admin/class-interactions-list-table.php:210
+#, php-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-interactions-list-table.php:218
+msgid "First page"
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:219
+msgid "Previous page"
+msgstr ""
+
+#. translators: 1: current page, 2: total pages.
+#: includes/admin/class-interactions-list-table.php:225
+#, php-format
+msgid "Page %1$s of %2$s"
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:231
+msgid "Next page"
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:232
+msgid "Last page"
+msgstr ""
+
+#. translators: %d: interaction id.
+#: includes/admin/class-interactions-list-table.php:262
+#, php-format
+msgid "(view the details of interaction %d)"
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:440
+msgid "None"
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:474
+msgid "(expand to read more)"
+msgstr ""
+
+#. translators: %d: number of characters shown.
+#: includes/admin/class-interactions-list-table.php:488
+#, php-format
+msgid "Shortened to %d characters."
+msgstr ""
+
+#: includes/admin/class-interactions-list-table.php:491
+msgid "Open the details for the full text"
+msgstr ""
+
+#. translators: %s: time zone name, e.g. "Europe/Rome".
+#: includes/admin/class-interactions-page.php:151
+#, php-format
+msgid "Dates and times are shown, and period limits are read, in the site time zone: %s."
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:273
+#: includes/admin/class-period-fields.php:65
+msgid "Period"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:278
+#: includes/admin/class-interactions-page.php:433
+msgid "Sort by"
+msgstr ""
+
+#. translators: %s: comma separated names of the filters.
+#: includes/admin/class-interactions-page.php:291
+#, php-format
+msgid "These filters were ignored because their value is not valid: %s."
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:326
+msgid "Search in question and answers"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:331
+#: includes/admin/class-interactions-page.php:344
+#: includes/admin/class-interactions-page.php:397
+#: includes/admin/class-interactions-page.php:411
+#: includes/admin/class-interactions-page.php:523
+#: includes/admin/class-interactions-page.php:545
+msgid "All"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:345
+msgid "Yes"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:346
+msgid "No"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:355
+msgid "Apply filters"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:356
+msgid "Reset"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:359
+msgid "The search text is sent in the request body and never appears in the address bar."
+msgstr ""
+
+#. translators: %d: number of active advanced filters.
+#: includes/admin/class-interactions-page.php:384
+#, php-format
+msgid "Advanced filters (%d active)"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:387
+msgid "Advanced filters"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:405
+msgid "User (exact)"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:419
+msgid "Tool"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:424
+msgid "Only interactions with an empty recall"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:428
+msgid "Only interactions where the generated and delivered answers differ"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:445
+msgid "Order"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:447
+msgid "Newest or highest first"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:448
+msgid "Oldest or lowest first"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:454
+msgid "Rows per page"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:546
+msgid "Any block recorded"
+msgstr ""
+
+#: includes/admin/class-interactions-page.php:547
+msgid "No block recorded"
+msgstr ""
+
+#: includes/admin/class-menu.php:105
+#: includes/admin/class-menu.php:106
+msgid "Monitor RAG"
+msgstr ""
+
+#: includes/admin/class-menu.php:144
+#: includes/admin/class-settings-page.php:104
+msgid "Settings"
+msgstr ""
+
+#: includes/admin/class-menu.php:152
+#: includes/admin/class-menu.php:153
+msgid "Interaction detail"
+msgstr ""
+
+#: includes/admin/class-notices.php:99
+msgid "The connection to the interaction log database is not configured yet. Complete the host, the database user and the password in Settings, or define the password in wp-config.php."
+msgstr ""
+
+#: includes/admin/class-notices.php:101
+msgid "The connection settings for the interaction log database are not valid. Check the host, port, database, table and user."
+msgstr ""
+
+#: includes/admin/class-notices.php:103
+msgid "The interaction log database cannot be reached. Check the connection settings and that the database server is available."
+msgstr ""
+
+#: includes/admin/class-period-fields.php:28
+msgid "Today"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:29
+msgid "Last week"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:30
+msgid "Last month"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:31
+msgid "Last 3 months"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:32
+msgid "Last 6 months"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:33
+msgid "Last year"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:34
+msgid "Custom (use the dates below)"
+msgstr ""
+
+#. translators: %s: name of the default period, e.g. "Last week".
+#: includes/admin/class-period-fields.php:48
+#, php-format
+msgid "The period was ignored because its value is not valid: the default period (%s) is shown."
+msgstr ""
+
+#: includes/admin/class-period-fields.php:79
+msgid "From (custom period)"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:80
+msgid "To (custom period)"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:111
+msgid "The saved password was removed."
+msgstr ""
+
+#: includes/admin/class-settings-page.php:130
+msgid "Test the connection"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:131
+msgid "Checks the saved settings: save your changes first."
+msgstr ""
+
+#: includes/admin/class-settings-page.php:135
+msgid "Test connection"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:173
+msgid "Remove the saved password"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:206
+msgid "The connection works and the table can be read."
+msgstr ""
+
+#: includes/admin/class-settings-page.php:213
+msgid "The database server was reached, but the table cannot be read. Check the database and table names and the SELECT privilege."
+msgstr ""
+
+#: includes/admin/class-settings-page.php:232
+msgid "defined in wp-config.php but not valid"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:234
+msgid "defined in wp-config.php"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:236
+msgid "saved here, encrypted"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:238
+msgid "saved here, but it cannot be read: type it again"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:240
+msgid "not set"
+msgstr ""
+
+#: includes/admin/class-settings-page.php:245
+#: includes/admin/class-settings.php:162
+msgid "Database password"
+msgstr ""
+
+#. translators: %s: name of the setting, e.g. "Port".
+#: includes/admin/class-settings-sanitizer.php:107
+#, php-format
+msgid "%s is not valid: the previous value was kept."
+msgstr ""
+
+#: includes/admin/class-settings.php:87
+msgid "Host"
+msgstr ""
+
+#: includes/admin/class-settings.php:89
+msgid "Port"
+msgstr ""
+
+#: includes/admin/class-settings.php:91
+msgid "Database"
+msgstr ""
+
+#: includes/admin/class-settings.php:93
+msgid "Table"
+msgstr ""
+
+#: includes/admin/class-settings.php:95
+msgid "Database user"
+msgstr ""
+
+#: includes/admin/class-settings.php:129
+msgid "Log database connection"
+msgstr ""
+
+#: includes/admin/class-settings.php:198
+msgid "The password is too long: the previous one was kept."
+msgstr ""
+
+#: includes/admin/class-settings.php:205
+msgid "The password was not saved: define unique security keys in wp-config.php first."
+msgstr ""
+
+#: includes/admin/class-settings.php:242
+#: includes/admin/class-settings.php:413
+msgid "Defined in wp-config.php: it cannot be changed here."
+msgstr ""
+
+#: includes/admin/class-settings.php:244
+msgid "To save the password here, define unique security keys (SECURE_AUTH_KEY and SECURE_AUTH_SALT) in wp-config.php. Until then, define ICT_RAG_MONITOR_DB_PASSWORD in wp-config.php instead."
+msgstr ""
+
+#: includes/admin/class-settings.php:246
+msgid "A saved password can no longer be read, usually because the security keys changed. Type it again."
+msgstr ""
+
+#: includes/admin/class-settings.php:248
+msgid "A password is saved, encrypted. Leave this field empty to keep it, or type a new one to replace it."
+msgstr ""
+
+#: includes/admin/class-settings.php:250
+msgid "No password is saved. It is stored encrypted, with a key derived from the security keys of wp-config.php, and is never shown again."
+msgstr ""
+
+#: includes/admin/class-settings.php:285
+msgid "Set the database connection parameters here. The password is stored encrypted and is never shown again; it can also be defined in wp-config.php, which takes precedence."
+msgstr ""
+
+#: includes/admin/class-settings.php:418
+msgid "Host name or IP address of the database server, without the port. Required."
+msgstr ""
+
+#: includes/admin/class-settings.php:420
+msgid "TCP port of the database server. Leave empty for 3306."
+msgstr ""
+
+#: includes/admin/class-settings.php:422
+msgid "Name of the database holding the log table. Leave empty for rag-interaction-logger-db."
+msgstr ""
+
+#: includes/admin/class-settings.php:424
+msgid "Name of the log table: letters, digits and underscores only. Leave empty for ril_interactions."
+msgstr ""
+
+#: includes/admin/class-settings.php:426
+msgid "Database account with SELECT-only access to the log table. Required."
+msgstr ""

@@ -80,9 +80,10 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 	 * Creates the page on the fake reader.
 	 *
 	 * @param bool $available Whether the log database is usable.
+	 * @param string[] $columns   Optional columns present in the table.
 	 * @return Anomalies_Page
 	 */
-	private function page( bool $available = true ): Anomalies_Page {
+	private function page( bool $available = true, array $columns = array() ): Anomalies_Page {
 		$repository = $available ? new Interaction_Repository(
 			$this->reader,
 			new Config(
@@ -91,7 +92,8 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 					'user'     => 'reader',
 					'password' => 'secret',
 				)
-			)
+			),
+			$columns
 		) : null;
 
 		return new Anomalies_Page(
@@ -145,6 +147,65 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * With the tools column, the page has nine rows: the six usual ones and the three about tools.
+	 *
+	 * @return void
+	 */
+	public function test_tools_anomalies_are_shown_with_the_column(): void {
+		$this->reader->rows = array(
+			array(
+				$this->counts_row() + array(
+					'tools_incomplete'     => '7',
+					'tools_no_guardrails'  => '8',
+					'tools_output_blocked' => '9',
+				),
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertSame( 9, substr_count( $output, 'View interactions<span' ) );
+		$this->assertMatchesRegularExpression( '/Tools ran but the turn is incomplete.*?<td>7<\/td>/s', $output );
+		$this->assertMatchesRegularExpression( '/Tools ran without Guardrails.*?<td>8<\/td>/s', $output );
+		$this->assertMatchesRegularExpression( '/Tools ran and the output was blocked.*?<td>9<\/td>/s', $output );
+		$this->assertStringContainsString( 'no check at all', $output );
+		$this->assertCount( 1, $this->reader->queries );
+	}
+
+	/**
+	 * Each tools link reopens the filters that were counted: the tools filter plus the one of its meaning.
+	 *
+	 * @return void
+	 */
+	public function test_tools_links_carry_their_filters(): void {
+		$this->reader->rows = array( array( $this->counts_row() ) );
+
+		$links = $this->links( $this->render( $this->page( true, array( 'tools_used' ) ) ) );
+
+		$this->assertSame( 'yes', $links['Tools ran but the turn is incomplete']['tools'] );
+		$this->assertSame( 'incomplete', $links['Tools ran but the turn is incomplete']['outcome'] );
+		$this->assertSame( 'yes', $links['Tools ran without Guardrails']['tools'] );
+		$this->assertSame( 'absent', $links['Tools ran without Guardrails']['guard'] );
+		$this->assertSame( 'yes', $links['Tools ran and the output was blocked']['tools'] );
+		$this->assertSame( Filters::VERDICT_ANY, $links['Tools ran and the output was blocked']['output_verdict'] );
+	}
+
+	/**
+	 * Without the column the page keeps its six rows and the query never mentions the column.
+	 *
+	 * @return void
+	 */
+	public function test_six_anomalies_without_the_column(): void {
+		$this->reader->rows = array( array( $this->counts_row() ) );
+
+		$output = $this->render( $this->page() );
+
+		$this->assertSame( 6, substr_count( $output, 'View interactions<span' ) );
+		$this->assertStringNotContainsString( 'Tools ran', $output );
+		$this->assertStringNotContainsString( 'tools_', $this->reader->queries[0] );
+	}
+
+	/**
 	 * Each anomaly has a row with its count.
 	 *
 	 * @return void
@@ -163,7 +224,7 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 		}
 
 		$this->assertMatchesRegularExpression( '/Incomplete interactions.*?<td>12<\/td>/s', $output );
-		$this->assertMatchesRegularExpression( '/Guardrails did not run.*?<td>0<\/td>/s', $output );
+		$this->assertMatchesRegularExpression( '/Guardrails did not handle the turn.*?<td>0<\/td>/s', $output );
 		$this->assertMatchesRegularExpression( '/Input blocked.*?<td>3<\/td>/s', $output );
 		$this->assertMatchesRegularExpression( '/Output blocked.*?<td>4<\/td>/s', $output );
 		$this->assertMatchesRegularExpression( '/Answer changed without an output verdict.*?<td>5<\/td>/s', $output );
@@ -311,7 +372,7 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 		}
 
 		$this->assertSame( array( 'page' => 'rilm-interactions', 'outcome' => 'incomplete' ), $links['Incomplete interactions'] );
-		$this->assertSame( array( 'page' => 'rilm-interactions', 'guard' => 'absent' ), $links['Guardrails did not run'] );
+		$this->assertSame( array( 'page' => 'rilm-interactions', 'guard' => 'absent' ), $links['Guardrails did not handle the turn'] );
 		$this->assertSame( array( 'page' => 'rilm-interactions', 'input_verdict' => Filters::VERDICT_ANY ), $links['Input blocked'] );
 		$this->assertSame( array( 'page' => 'rilm-interactions', 'output_verdict' => Filters::VERDICT_ANY ), $links['Output blocked'] );
 		$this->assertSame(

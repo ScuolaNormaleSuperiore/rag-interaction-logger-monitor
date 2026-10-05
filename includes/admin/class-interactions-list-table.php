@@ -427,7 +427,7 @@ class Interactions_List_Table extends \WP_List_Table {
 			$args['paged'] = $page;
 		}
 
-		return add_query_arg( array( 'page' => Menu::SLUG_INTERACTIONS ) + $args, admin_url( 'admin.php' ) );
+		return add_query_arg( urlencode_deep( array( 'page' => Menu::SLUG_INTERACTIONS ) + $args ), admin_url( 'admin.php' ) );
 	}
 
 	/**

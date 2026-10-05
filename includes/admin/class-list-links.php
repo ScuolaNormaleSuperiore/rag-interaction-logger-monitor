@@ -38,6 +38,6 @@ class List_Links {
 		$period_args = array_intersect_key( $current->to_query_args(), array_flip( self::PERIOD_KEYS ) );
 		$args        = Filters::from_array( $period_args + $input, $now )->to_query_args();
 
-		return add_query_arg( array( 'page' => Menu::SLUG_INTERACTIONS ) + $args, admin_url( 'admin.php' ) );
+		return add_query_arg( urlencode_deep( array( 'page' => Menu::SLUG_INTERACTIONS ) + $args ), admin_url( 'admin.php' ) );
 	}
 }

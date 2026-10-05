@@ -85,6 +85,17 @@ class Dashboard_Report {
 			'daily'         => array(),
 		);
 
+		// The tools figures exist only when the table has the column.
+		if ( isset( $summary['tools'] ) ) {
+			$by_name = $summary['tools'] > 0 ? $this->repository->tool_counts( $period ) : null;
+
+			$report['tools'] = $this->share( $summary['tools'], $total ) + array(
+				'by_name'        => null === $by_name ? array() : $by_name['counts'],
+				'by_name_cut'    => null !== $by_name && $by_name['truncated'],
+				'by_name_failed' => $summary['tools'] > 0 && null === $by_name,
+			);
+		}
+
 		$report['daily_failed'] = false;
 
 		// No turns, no series: an empty period must not become a chart of zeros.

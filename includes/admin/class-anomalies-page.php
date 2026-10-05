@@ -133,35 +133,23 @@ class Anomalies_Page {
 	/**
 	 * Returns the label and the explanation of each anomaly.
 	 *
+	 * The words come from `Indicator_Texts`, which the Dashboard legend also uses, so the
+	 * two pages always explain the same thing in the same way.
+	 *
+	 * @param string[] $optional_columns Optional columns present in the table; the tools anomalies need `tools_used`.
 	 * @return array<string, array{label: string, description: string}>
 	 */
-	public static function descriptions(): array {
-		return array(
-			Anomalies::INCOMPLETE     => array(
-				'label'       => __( 'Incomplete interactions', 'rag-interaction-logger-monitor' ),
-				'description' => __( 'The turn did not complete.', 'rag-interaction-logger-monitor' ),
-			),
-			Anomalies::NO_GUARDRAILS  => array(
-				'label'       => __( 'Guardrails did not run', 'rag-interaction-logger-monitor' ),
-				'description' => __( 'No Guardrails check is recorded for the turn.', 'rag-interaction-logger-monitor' ),
-			),
-			Anomalies::INPUT_BLOCKS   => array(
-				'label'       => __( 'Input blocked', 'rag-interaction-logger-monitor' ),
-				'description' => __( 'Guardrails recorded a verdict on the question.', 'rag-interaction-logger-monitor' ),
-			),
-			Anomalies::OUTPUT_BLOCKS  => array(
-				'label'       => __( 'Output blocked', 'rag-interaction-logger-monitor' ),
-				'description' => __( 'Guardrails recorded a verdict on the answer.', 'rag-interaction-logger-monitor' ),
-			),
-			Anomalies::ANSWERS_DIFFER => array(
-				'label'       => __( 'Answer changed without an output verdict', 'rag-interaction-logger-monitor' ),
-				'description' => __( 'The delivered answer differs from the generated one, but no output verdict explains it.', 'rag-interaction-logger-monitor' ),
-			),
-			Anomalies::ZERO_RECALL    => array(
-				'label'       => __( 'Generated without recalled sources', 'rag-interaction-logger-monitor' ),
-				'description' => __( 'A generated answer for which no source was recalled.', 'rag-interaction-logger-monitor' ),
-			),
-		);
+	public static function descriptions( array $optional_columns = array() ): array {
+		$descriptions = array();
+
+		foreach ( array_keys( Anomalies::definitions( $optional_columns ) ) as $key ) {
+			$descriptions[ $key ] = array(
+				'label'       => Indicator_Texts::anomaly_label( $key ),
+				'description' => Indicator_Texts::description( $key ),
+			);
+		}
+
+		return $descriptions;
 	}
 
 	/**
@@ -221,6 +209,9 @@ class Anomalies_Page {
 			return;
 		}
 
+		$columns     = $repository->supports_tools() ? array( 'tools_used' ) : array();
+		$definitions = Anomalies::definitions( $columns );
+
 		?>
 		<p>
 			<?php
@@ -243,8 +234,8 @@ class Anomalies_Page {
 			</thead>
 			<tbody>
 				<?php
-				foreach ( self::descriptions() as $key => $text ) {
-					$url = List_Links::url( $filters, Anomalies::definitions()[ $key ], $now );
+				foreach ( self::descriptions( $columns ) as $key => $text ) {
+					$url = List_Links::url( $filters, $definitions[ $key ], $now );
 
 					printf(
 						'<tr><th scope="row">%1$s<br /><span class="description">%2$s</span></th><td>%3$s</td><td><a href="%4$s">%5$s<span class="screen-reader-text"> %6$s</span></a></td></tr>',

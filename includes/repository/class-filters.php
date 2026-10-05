@@ -73,6 +73,16 @@ class Filters {
 	public const REPLY_UNKNOWN = 'unknown';
 
 	/**
+	 * Tools filter value: at least one tool or form ran.
+	 */
+	public const TOOLS_YES = 'yes';
+
+	/**
+	 * Tools filter value: no tool or form ran.
+	 */
+	public const TOOLS_NO = 'no';
+
+	/**
 	 * Longest text kept for instance and user filters.
 	 */
 	private const MAX_IDENTIFIER_LENGTH = 255;
@@ -219,6 +229,20 @@ class Filters {
 			}
 		}
 
+		$tools = self::text( $input, 'tools', 10 );
+		if ( null !== $tools ) {
+			if ( in_array( $tools, array( self::TOOLS_YES, self::TOOLS_NO ), true ) ) {
+				$values['tools'] = $tools;
+			} else {
+				$errors[] = 'tools';
+			}
+		}
+
+		$tool = self::text( $input, 'tool', self::MAX_IDENTIFIER_LENGTH );
+		if ( null !== $tool ) {
+			$values['tool'] = $tool;
+		}
+
 		if ( 'empty' === self::text( $input, 'recall', 10 ) ) {
 			$values['recall_empty'] = true;
 		}
@@ -329,6 +353,24 @@ class Filters {
 	}
 
 	/**
+	 * Returns the tools filter.
+	 *
+	 * @return string|null TOOLS_YES, TOOLS_NO or null.
+	 */
+	public function tools(): ?string {
+		return $this->values['tools'] ?? null;
+	}
+
+	/**
+	 * Returns the name of the tool (or form) that must appear among the ones used.
+	 *
+	 * @return string|null
+	 */
+	public function tool(): ?string {
+		return $this->values['tool'] ?? null;
+	}
+
+	/**
 	 * Tells whether only interactions with an empty recall are wanted.
 	 *
 	 * @return bool
@@ -412,8 +454,8 @@ class Filters {
 	/**
 	 * Counts the active filters shown in the "advanced filters" section.
 	 *
-	 * Period, search, Guardrails and the input verdict are always visible and are not
-	 * counted here; neither are sorting and page size, which change the view and not
+	 * Period, search, Guardrails, the input verdict and the tools yes/no choice are always
+	 * visible and are not counted here; neither are sorting and page size, which change the view and not
 	 * the rows that match.
 	 *
 	 * @return int
@@ -421,7 +463,7 @@ class Filters {
 	public function advanced_count(): int {
 		$count = 0;
 
-		foreach ( array( 'outcome', 'instance', 'user_id', 'output_verdict', 'other_reply' ) as $key ) {
+		foreach ( array( 'outcome', 'instance', 'user_id', 'output_verdict', 'other_reply', 'tool' ) as $key ) {
 			if ( isset( $this->values[ $key ] ) ) {
 				++$count;
 			}
@@ -485,6 +527,8 @@ class Filters {
 			'input_verdict'  => 'input_verdict',
 			'output_verdict' => 'output_verdict',
 			'other_reply'    => 'other_reply',
+			'tools'          => 'tools',
+			'tool'           => 'tool',
 		) as $name => $key ) {
 			if ( isset( $this->values[ $key ] ) ) {
 				$args[ $name ] = $this->values[ $key ];

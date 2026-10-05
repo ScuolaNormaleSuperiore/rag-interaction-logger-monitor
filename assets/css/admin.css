@@ -176,6 +176,21 @@
 	vertical-align: -1px;
 }
 
+/* Dashboard legend: a definition list under the indicators table. */
+.rilm-legend-list {
+	max-width: 80ch;
+	margin: 0 0 16px;
+}
+
+.rilm-legend-list dt {
+	margin-top: 8px;
+	font-weight: 600;
+}
+
+.rilm-legend-list dd {
+	margin: 2px 0 0;
+}
+
 /* Detail page: a two-column table of fields and the full texts in plain boxes. */
 .rilm-detail-table {
 	margin-bottom: 16px;

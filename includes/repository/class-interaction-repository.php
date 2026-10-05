@@ -47,6 +47,11 @@ class Interaction_Repository {
 	private const DISTINCT_LIMIT = 200;
 
 	/**
+	 * Most distinct combinations of tools read to build the per-tool counts.
+	 */
+	private const TOOL_COMBINATION_LIMIT = 500;
+
+	/**
 	 * Most verdicts returned by a count.
 	 */
 	private const VERDICT_LIMIT = 50;
@@ -126,6 +131,15 @@ class Interaction_Repository {
 		}
 
 		return new self( $db, $connection->config(), $columns->present() );
+	}
+
+	/**
+	 * Tells whether the table has the `tools_used` column, so the tools filters and figures exist.
+	 *
+	 * @return bool
+	 */
+	public function supports_tools(): bool {
+		return in_array( 'tools_used', $this->optional_columns, true );
 	}
 
 	/**
@@ -242,7 +256,7 @@ class Interaction_Repository {
 	 * @return array<string, int>|null Counts keyed by `total` and by anomaly key; null when the query failed.
 	 */
 	public function anomaly_counts( Period $period ): ?array {
-		$row = $this->aggregate( Anomalies::definitions(), array(), $period );
+		$row = $this->aggregate( Anomalies::definitions( $this->optional_columns ), array(), $period );
 
 		if ( null === $row ) {
 			return null;
@@ -250,7 +264,7 @@ class Interaction_Repository {
 
 		$counts = array( 'total' => (int) ( $row['total'] ?? 0 ) );
 
-		foreach ( array_keys( Anomalies::definitions() ) as $key ) {
+		foreach ( array_keys( Anomalies::definitions( $this->optional_columns ) ) as $key ) {
 			// SUM() is NULL when no row matches the period.
 			$counts[ $key ] = (int) ( $row[ $key ] ?? 0 );
 		}
@@ -262,12 +276,18 @@ class Interaction_Repository {
 	 * Returns, in one query, the figures of the dashboard for a period.
 	 *
 	 * @param Period $period Period to summarise.
-	 * @return array{total: int, generated: int, fast_reply: int, incomplete: int, no_guardrails: int, input_blocks: int, output_blocks: int, zero_recall: int, completed: int, average_ms: float|null}|null Null when the query failed.
+	 * @return array{total: int, generated: int, fast_reply: int, incomplete: int, no_guardrails: int, input_blocks: int, output_blocks: int, zero_recall: int, completed: int, average_ms: float|null, tools?: int}|null Null when the query failed; `tools` is present only when the table has `tools_used`.
 	 */
 	public function summary( Period $period ): ?array {
-		$completed = 'CASE WHEN ' . self::COMPLETED . ' THEN 1 ELSE 0 END';
-		$row       = $this->aggregate(
-			self::SUMMARY_DEFINITIONS,
+		$completed   = 'CASE WHEN ' . self::COMPLETED . ' THEN 1 ELSE 0 END';
+		$definitions = self::SUMMARY_DEFINITIONS;
+
+		if ( $this->supports_tools() ) {
+			$definitions['tools'] = array( 'tools' => Filters::TOOLS_YES );
+		}
+
+		$row = $this->aggregate(
+			$definitions,
 			array(
 				'completed'  => 'SUM( ' . $completed . ' )',
 				'average_ms' => 'AVG( CASE WHEN ' . self::COMPLETED . ' THEN duration_ms END )',
@@ -281,7 +301,7 @@ class Interaction_Repository {
 
 		$summary = array( 'total' => (int) ( $row['total'] ?? 0 ) );
 
-		foreach ( array_keys( self::SUMMARY_DEFINITIONS ) as $key ) {
+		foreach ( array_keys( $definitions ) as $key ) {
 			$summary[ $key ] = (int) ( $row[ $key ] ?? 0 );
 		}
 
@@ -322,6 +342,60 @@ class Interaction_Repository {
 		}
 
 		return array_sum( array_map( 'floatval', $values ) ) / count( $values );
+	}
+
+	/**
+	 * Counts, for each tool or form, the turns of a period in which it ran.
+	 *
+	 * Splitting a comma-separated list is not portable in SQL, so the distinct
+	 * combinations are grouped by the database and split here. A turn that lists a
+	 * name twice counts once; a turn with several tools counts in each of them.
+	 *
+	 * @param Period $period Period to look into.
+	 * @return array{counts: array<string, int>, truncated: bool}|null Counts keyed by name, most frequent first; `truncated` is true when there were more combinations than were read; null when the table has no `tools_used` or the query failed.
+	 */
+	public function tool_counts( Period $period ): ?array {
+		if ( ! $this->supports_tools() ) {
+			return null;
+		}
+
+		$query = $this->db->prepare(
+			'SELECT tools_used AS names, COUNT(*) AS turns FROM ' . $this->table . " WHERE ts >= %s AND ts <= %s AND tools_used IS NOT NULL AND TRIM( tools_used ) <> '' GROUP BY tools_used ORDER BY turns DESC LIMIT %d",
+			array( $period->start_utc(), $period->end_utc(), self::TOOL_COMBINATION_LIMIT + 1 )
+		);
+
+		$rows = $this->db->get_results( $query, 'ARRAY_A' );
+
+		if ( ! is_array( $rows ) ) {
+			return null;
+		}
+
+		$truncated = count( $rows ) > self::TOOL_COMBINATION_LIMIT;
+		$counts    = array();
+
+		foreach ( array_slice( $rows, 0, self::TOOL_COMBINATION_LIMIT ) as $row ) {
+			if ( ! is_array( $row ) || ! isset( $row['names'] ) ) {
+				continue;
+			}
+
+			$names = array_unique( array_filter( array_map( 'trim', explode( ',', (string) $row['names'] ) ), 'strlen' ) );
+
+			foreach ( $names as $name ) {
+				$counts[ $name ] = ( $counts[ $name ] ?? 0 ) + (int) ( $row['turns'] ?? 0 );
+			}
+		}
+
+		uksort(
+			$counts,
+			static function ( string $a, string $b ) use ( $counts ): int {
+				return array( $counts[ $b ], $a ) <=> array( $counts[ $a ], $b );
+			}
+		);
+
+		return array(
+			'counts'    => $counts,
+			'truncated' => $truncated,
+		);
 	}
 
 	/**
@@ -503,6 +577,10 @@ class Interaction_Repository {
 			$clauses[] = 'other_plugin_reply IS NULL';
 		}
 
+		if ( $this->supports_tools() ) {
+			$this->add_tools( $filters, $clauses, $params );
+		}
+
 		if ( $filters->recall_empty() ) {
 			$clauses[] = 'recall_count = 0';
 		}
@@ -522,6 +600,30 @@ class Interaction_Repository {
 		}
 
 		return array( $clauses, $params );
+	}
+
+	/**
+	 * Adds the clauses of the tools filters.
+	 *
+	 * A name matches only as a whole item of the comma-separated list (a space after the
+	 * comma is tolerated), never as part of another name, and `%` and `_` in it are literal.
+	 *
+	 * @param Filters  $filters Filters.
+	 * @param string[] $clauses Clauses being built.
+	 * @param array    $params  Values being built.
+	 * @return void
+	 */
+	private function add_tools( Filters $filters, array &$clauses, array &$params ): void {
+		if ( Filters::TOOLS_YES === $filters->tools() ) {
+			$clauses[] = "( tools_used IS NOT NULL AND TRIM( tools_used ) <> '' )";
+		} elseif ( Filters::TOOLS_NO === $filters->tools() ) {
+			$clauses[] = "( tools_used IS NULL OR TRIM( tools_used ) = '' )";
+		}
+
+		if ( null !== $filters->tool() ) {
+			$clauses[] = "CONCAT( ',', REPLACE( tools_used, ', ', ',' ), ',' ) LIKE %s";
+			$params[]  = '%,' . $this->db->esc_like( $filters->tool() ) . ',%';
+		}
 	}
 
 	/**

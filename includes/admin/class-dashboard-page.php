@@ -223,6 +223,7 @@ class Dashboard_Page {
 
 		$this->render_tiles( $report, $link );
 		$this->render_indicators( $report, $link );
+		$this->render_tools( $report, $link );
 		$this->render_verdicts( $report, $link );
 		$this->render_trend( $report );
 	}
@@ -272,53 +273,27 @@ class Dashboard_Page {
 	 * @return void
 	 */
 	private function render_indicators( array $report, callable $link ): void {
-		$rows = array(
+		$rows       = array(
+			array( Indicator_Texts::GENERATED, $report['outcomes']['generated'], array( 'outcome' => 'generated' ) ),
+			array( Indicator_Texts::FAST_REPLY, $report['outcomes']['fast_reply'], array( 'outcome' => 'fast_reply' ) ),
+			array( Indicator_Texts::INCOMPLETE, $report['outcomes']['incomplete'], array( 'outcome' => 'incomplete' ) ),
+			array( Indicator_Texts::INPUT_BLOCKS, $report['input_blocks'], array( 'input_verdict' => Filters::VERDICT_ANY ) ),
+			array( Indicator_Texts::OUTPUT_BLOCKS, $report['output_blocks'], array( 'output_verdict' => Filters::VERDICT_ANY ) ),
+			array( Indicator_Texts::NO_GUARDRAILS, $report['no_guardrails'], array( 'guard' => Filters::GUARD_ABSENT ) ),
 			array(
-				__( 'Generated', 'rag-interaction-logger-monitor' ),
-				$report['outcomes']['generated'],
-				array( 'outcome' => 'generated' ),
-				__( 'of all turns', 'rag-interaction-logger-monitor' ),
-			),
-			array(
-				__( 'Fast reply', 'rag-interaction-logger-monitor' ),
-				$report['outcomes']['fast_reply'],
-				array( 'outcome' => 'fast_reply' ),
-				__( 'of all turns', 'rag-interaction-logger-monitor' ),
-			),
-			array(
-				__( 'Incomplete', 'rag-interaction-logger-monitor' ),
-				$report['outcomes']['incomplete'],
-				array( 'outcome' => 'incomplete' ),
-				__( 'of all turns', 'rag-interaction-logger-monitor' ),
-			),
-			array(
-				__( 'Input blocked', 'rag-interaction-logger-monitor' ),
-				$report['input_blocks'],
-				array( 'input_verdict' => Filters::VERDICT_ANY ),
-				__( 'of all turns', 'rag-interaction-logger-monitor' ),
-			),
-			array(
-				__( 'Output blocked', 'rag-interaction-logger-monitor' ),
-				$report['output_blocks'],
-				array( 'output_verdict' => Filters::VERDICT_ANY ),
-				__( 'of all turns', 'rag-interaction-logger-monitor' ),
-			),
-			array(
-				__( 'Guardrails did not run', 'rag-interaction-logger-monitor' ),
-				$report['no_guardrails'],
-				array( 'guard' => Filters::GUARD_ABSENT ),
-				__( 'of all turns', 'rag-interaction-logger-monitor' ),
-			),
-			array(
-				__( 'Generated without recalled sources', 'rag-interaction-logger-monitor' ),
+				Indicator_Texts::ZERO_RECALL,
 				$report['zero_recall'],
 				array(
 					'outcome' => 'generated',
 					'recall'  => 'empty',
 				),
-				__( 'of generated answers', 'rag-interaction-logger-monitor' ),
 			),
 		);
+		$with_tools = isset( $report['tools'] );
+
+		if ( $with_tools ) {
+			$rows[] = array( Indicator_Texts::TOOLS, $report['tools'], array( 'tools' => Filters::TOOLS_YES ) );
+		}
 		?>
 		<h2><?php esc_html_e( 'Indicators', 'rag-interaction-logger-monitor' ); ?></h2>
 		<table class="widefat striped rilm-indicators-table">
@@ -332,7 +307,10 @@ class Dashboard_Page {
 			<tbody>
 				<?php
 				foreach ( $rows as $row ) {
-					list( $label, $figure, $input, $whole ) = $row;
+					list( $key, $figure, $input ) = $row;
+
+					$label = Indicator_Texts::label( $key );
+					$whole = Indicator_Texts::basis_phrase( $key );
 
 					printf(
 						'<tr><th scope="row">%1$s</th><td><a href="%2$s">%3$s<span class="screen-reader-text"> (%4$s)</span></a></td><td>%5$s %6$s</td></tr>',
@@ -347,6 +325,95 @@ class Dashboard_Page {
 				?>
 			</tbody>
 		</table>
+		<?php
+		$this->render_legend( $with_tools );
+	}
+
+	/**
+	 * Prints the number of turns in which each tool or form ran, when the table has the tools column.
+	 *
+	 * @param array<string, mixed> $report Report of the period.
+	 * @param callable             $link   Builds the list URL for filter input.
+	 * @return void
+	 */
+	private function render_tools( array $report, callable $link ): void {
+		if ( ! isset( $report['tools'] ) ) {
+			return;
+		}
+
+		$tools = $report['tools'];
+		?>
+		<h2><?php esc_html_e( 'Tools and forms', 'rag-interaction-logger-monitor' ); ?></h2>
+		<?php
+		if ( $tools['by_name_failed'] ) {
+			?>
+			<p><?php esc_html_e( 'The tools could not be loaded.', 'rag-interaction-logger-monitor' ); ?></p>
+			<?php
+			return;
+		}
+
+		if ( array() === $tools['by_name'] ) {
+			?>
+			<p><?php esc_html_e( 'No tool or form ran in this period.', 'rag-interaction-logger-monitor' ); ?></p>
+			<?php
+			return;
+		}
+		?>
+		<p class="description"><?php esc_html_e( 'A turn that used several tools is counted in each of them, so the counts can add up to more than the turns that used tools.', 'rag-interaction-logger-monitor' ); ?></p>
+		<?php
+		if ( $tools['by_name_cut'] ) {
+			wp_admin_notice(
+				esc_html__( 'There are too many different combinations of tools in this period: the counts below are partial. Choose a shorter period.', 'rag-interaction-logger-monitor' ),
+				array( 'type' => 'warning' )
+			);
+		}
+		?>
+		<table class="widefat striped rilm-tools-table">
+			<thead>
+				<tr>
+					<th scope="col"><?php esc_html_e( 'Tool or form', 'rag-interaction-logger-monitor' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'Interactions', 'rag-interaction-logger-monitor' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach ( $tools['by_name'] as $name => $turns ) {
+					printf(
+						'<tr><th scope="row">%1$s</th><td><a href="%2$s">%3$s<span class="screen-reader-text"> (%1$s)</span></a></td></tr>',
+						esc_html( (string) $name ),
+						esc_url( $link( array( 'tool' => (string) $name ) ) ),
+						esc_html( number_format_i18n( $turns ) )
+					);
+				}
+				?>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Prints the legend that says what each indicator counts and what its share is taken of.
+	 *
+	 * The wording comes from `Indicator_Texts`, which the Anomalies page also uses.
+	 *
+	 * @param bool $with_tools Whether the table has the tools column, so the tools row has an entry.
+	 * @return void
+	 */
+	private function render_legend( bool $with_tools ): void {
+		?>
+		<h3 id="rilm-indicators-legend"><?php esc_html_e( 'What the indicators mean', 'rag-interaction-logger-monitor' ); ?></h3>
+		<dl class="rilm-legend-list" aria-labelledby="rilm-indicators-legend">
+			<?php
+			foreach ( Indicator_Texts::dashboard_keys( $with_tools ) as $key ) {
+				printf(
+					'<dt>%1$s</dt><dd>%2$s %3$s</dd>',
+					esc_html( Indicator_Texts::label( $key ) ),
+					esc_html( Indicator_Texts::description( $key ) ),
+					esc_html( Indicator_Texts::basis_sentence( $key ) )
+				);
+			}
+			?>
+		</dl>
 		<?php
 	}
 

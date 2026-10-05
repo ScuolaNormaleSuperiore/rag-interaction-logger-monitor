@@ -75,6 +75,7 @@ Per l'intervallo selezionato, mostrare:
 - durata media e mediana esatta dei turni completati (outcome diverso da incomplete e duration_ms non NULL, quindi generated e fast_reply);
 - percentuale generated con recall_count uguale a zero;
 - se la colonna tools_used esiste: numero e percentuale dei turni che hanno usato almeno uno strumento, e per ciascuno strumento (o modulo) il numero di turni in cui è comparso, ciascuno con un collegamento all'elenco già filtrato; un turno con più strumenti conta in ciascuno, quindi la somma per strumento può superare il numero di turni con strumenti;
+- sotto la tabella degli indicatori, una legenda che dice cosa conta ciascun indicatore (condizione esatta, come quella del collegamento) e di cosa è la percentuale (di tutti i turni, oppure dei generated per il recall); le definizioni sono le stesse della pagina Anomalie. «Senza Guardrails» è presentato come «Guardrails did not handle the turn»: guard_present = 0 significa che rag-guardrails non ha lasciato traccia sul turno (assente, non attivo o non ha gestito quel turno);
 - andamento giornaliero di turni, incomplete e blocchi;
 - link alle viste Interazioni già filtrate.
 
