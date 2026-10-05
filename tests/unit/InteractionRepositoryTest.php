@@ -73,7 +73,8 @@ class InteractionRepositoryTest extends TestCase {
 	 * @return Filters
 	 */
 	private static function filters( array $input = array() ): Filters {
-		return Filters::from_array( $input, new DateTimeImmutable( '2026-10-02 14:30:00', new DateTimeZone( 'Europe/Rome' ) ) );
+		// These tests are about the clauses, not the default period: they ask for "today" unless a test says otherwise.
+		return Filters::from_array( $input + array( 'period' => 'today' ), new DateTimeImmutable( '2026-10-02 14:30:00', new DateTimeZone( 'Europe/Rome' ) ) );
 	}
 
 	/**

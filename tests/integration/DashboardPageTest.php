@@ -226,7 +226,7 @@ class DashboardPageTest extends WP_UnitTestCase {
 	 * @return void
 	 */
 	public function test_counts_link_to_the_filtered_list(): void {
-		$_GET = array( 'period' => 'week' );
+		$_GET = array( 'period' => 'month' );
 
 		$this->load();
 
@@ -252,7 +252,7 @@ class DashboardPageTest extends WP_UnitTestCase {
 		$this->assertCount( count( $expected ), $links );
 
 		foreach ( $expected as $index => $filters ) {
-			$this->assertSame( array( 'page' => 'rilm-interactions', 'period' => 'week' ) + $filters, $links[ $index ], 'Link ' . $index );
+			$this->assertSame( array( 'page' => 'rilm-interactions', 'period' => 'month' ) + $filters, $links[ $index ], 'Link ' . $index );
 		}
 	}
 
@@ -399,22 +399,60 @@ class DashboardPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The default period is today, and the period is read in local time.
+	 * The default period is the last week, and the period is read in local time.
 	 *
 	 * @return void
 	 */
-	public function test_default_period_is_today(): void {
+	public function test_default_period_is_last_week(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
+		$this->assertMatchesRegularExpression( '/<option value="week" selected=\'selected\'>/', $output );
+		$this->assertStringContainsString( 'Europe/Rome', $output );
+	}
+
+	/**
+	 * Today is still a choice and starts at local midnight.
+	 *
+	 * @return void
+	 */
+	public function test_today_can_still_be_chosen(): void {
+		$_GET = array( 'period' => 'today' );
+
 		$this->load();
 
 		$output = $this->render( $this->page() );
 
 		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
 		$this->assertMatchesRegularExpression( '/<option value="today" selected=\'selected\'>/', $output );
-		$this->assertStringContainsString( 'Europe/Rome', $output );
 	}
 
 	/**
-	 * An invalid period falls back to today and the user is told.
+	 * Links built on "today" keep it, and links on the default period leave it out.
+	 *
+	 * @return void
+	 */
+	public function test_links_keep_today_and_omit_the_default_period(): void {
+		$_GET = array( 'period' => 'today' );
+		$this->load();
+
+		foreach ( $this->list_links( $this->render( $this->page() ) ) as $index => $args ) {
+			$this->assertSame( 'today', $args['period'], 'Link ' . $index );
+		}
+
+		$_GET               = array();
+		$this->reader       = new Fake_Reader();
+		$this->load();
+
+		foreach ( $this->list_links( $this->render( $this->page() ) ) as $index => $args ) {
+			$this->assertArrayNotHasKey( 'period', $args, 'Link ' . $index );
+		}
+	}
+
+	/**
+	 * An invalid period falls back to the default and the user is told which one is shown.
 	 *
 	 * @return void
 	 */
@@ -425,8 +463,8 @@ class DashboardPageTest extends WP_UnitTestCase {
 
 		$output = $this->render( $this->page() );
 
-		$this->assertStringContainsString( 'The period was ignored', $output );
-		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000'", $this->reader->queries[0] );
+		$this->assertStringContainsString( 'The period was ignored because its value is not valid: the default period (Last week) is shown.', $output );
+		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000'", $this->reader->queries[0] );
 	}
 
 	/**
@@ -487,6 +525,8 @@ class DashboardPageTest extends WP_UnitTestCase {
 	 * @return void
 	 */
 	public function test_hours_are_grouped_by_local_day(): void {
+		$_GET = array( 'period' => 'today' );
+
 		$this->load();
 
 		$output = $this->render( $this->page() );

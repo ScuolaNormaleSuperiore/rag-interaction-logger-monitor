@@ -185,18 +185,61 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The default period is today.
+	 * The default period is the last week.
 	 *
 	 * @return void
 	 */
-	public function test_default_period_is_today(): void {
+	public function test_default_period_is_last_week(): void {
+		$this->reader->rows = array( array( $this->counts_row() ) );
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
+		$this->assertMatchesRegularExpression( '/<option value="week" selected=\'selected\'>/', $output );
+		$this->assertStringContainsString( 'Europe/Rome', $output );
+	}
+
+	/**
+	 * Today is still a choice and starts at local midnight.
+	 *
+	 * @return void
+	 */
+	public function test_today_can_still_be_chosen(): void {
+		$_GET               = array( 'period' => 'today' );
 		$this->reader->rows = array( array( $this->counts_row() ) );
 
 		$output = $this->render( $this->page() );
 
 		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
 		$this->assertMatchesRegularExpression( '/<option value="today" selected=\'selected\'>/', $output );
-		$this->assertStringContainsString( 'Europe/Rome', $output );
+		$this->assertMatchesRegularExpression( '/<option value="today"/', $output );
+	}
+
+	/**
+	 * Links built on "today" keep it, instead of falling back to the default.
+	 *
+	 * @return void
+	 */
+	public function test_links_keep_today(): void {
+		$_GET               = array( 'period' => 'today' );
+		$this->reader->rows = array( array( $this->counts_row() ) );
+
+		foreach ( $this->links( $this->render( $this->page() ) ) as $label => $args ) {
+			$this->assertSame( 'today', $args['period'], $label );
+		}
+	}
+
+	/**
+	 * Links built on the default period leave it out: the list applies the same default.
+	 *
+	 * @return void
+	 */
+	public function test_links_on_the_default_period_do_not_repeat_it(): void {
+		$this->reader->rows = array( array( $this->counts_row() ) );
+
+		foreach ( $this->links( $this->render( $this->page() ) ) as $label => $args ) {
+			$this->assertArrayNotHasKey( 'period', $args, $label );
+		}
 	}
 
 	/**
@@ -205,13 +248,13 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 	 * @return void
 	 */
 	public function test_chosen_period_applies_to_the_counts(): void {
-		$_GET               = array( 'period' => 'week' );
+		$_GET               = array( 'period' => 'month' );
 		$this->reader->rows = array( array( $this->counts_row() ) );
 
 		$output = $this->render( $this->page() );
 
-		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000'", $this->reader->queries[0] );
-		$this->assertMatchesRegularExpression( '/<option value="week" selected=\'selected\'>/', $output );
+		$this->assertStringContainsString( "ts >= '2026-09-02 12:30:00.000'", $this->reader->queries[0] );
+		$this->assertMatchesRegularExpression( '/<option value="month" selected=\'selected\'>/', $output );
 	}
 
 	/**
@@ -236,7 +279,7 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * An invalid period falls back to today and the user is told.
+	 * An invalid period falls back to the default and the user is told which one is shown.
 	 *
 	 * @return void
 	 */
@@ -246,8 +289,8 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 
 		$output = $this->render( $this->page() );
 
-		$this->assertStringContainsString( 'The period was ignored', $output );
-		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000'", $this->reader->queries[0] );
+		$this->assertStringContainsString( 'The period was ignored because its value is not valid: the default period (Last week) is shown.', $output );
+		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000'", $this->reader->queries[0] );
 		$this->assertStringNotContainsString( 'fortnight', $this->reader->queries[0] );
 	}
 

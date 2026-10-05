@@ -64,6 +64,11 @@ class Period {
 	public const PRESETS = array( self::TODAY, self::WEEK, self::MONTH, self::THREE_MONTHS, self::SIX_MONTHS, self::YEAR );
 
 	/**
+	 * Preset used when no period is chosen, or when the chosen one is not valid.
+	 */
+	public const DEFAULT_PRESET = self::WEEK;
+
+	/**
 	 * Length of each moving preset, in days or in months.
 	 */
 	private const START_OFFSETS = array(

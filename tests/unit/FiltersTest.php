@@ -36,8 +36,10 @@ class FiltersTest extends TestCase {
 	public function test_defaults(): void {
 		$filters = self::filters( array() );
 
-		$this->assertSame( Period::TODAY, $filters->period()->key() );
-		$this->assertSame( '2026-10-01 22:00:00.000', $filters->period()->start_utc() );
+		$this->assertSame( Period::WEEK, $filters->period()->key(), 'The default period is the last week.' );
+		$this->assertSame( Period::DEFAULT_PRESET, $filters->period()->key() );
+		$this->assertSame( '2026-09-25 12:30:00.000', $filters->period()->start_utc() );
+		$this->assertSame( '2026-10-02 12:30:00.000', $filters->period()->end_utc() );
 		$this->assertSame( 'ts', $filters->orderby() );
 		$this->assertSame( 'DESC', $filters->order() );
 		$this->assertSame( 1, $filters->page() );
@@ -116,7 +118,7 @@ class FiltersTest extends TestCase {
 		$this->assertNull( $filters->guard() );
 		$this->assertNull( $filters->other_reply() );
 		$this->assertSame( 'ts', $filters->orderby() );
-		$this->assertSame( Period::TODAY, $filters->period()->key() );
+		$this->assertSame( Period::DEFAULT_PRESET, $filters->period()->key(), 'An invalid period falls back to the default.' );
 	}
 
 	/**
@@ -228,7 +230,7 @@ class FiltersTest extends TestCase {
 		);
 
 		$this->assertSame( array( 'period' ), $filters->errors() );
-		$this->assertSame( Period::TODAY, $filters->period()->key() );
+		$this->assertSame( Period::DEFAULT_PRESET, $filters->period()->key(), 'A refused custom period falls back to the default.' );
 	}
 
 	/**
@@ -243,7 +245,7 @@ class FiltersTest extends TestCase {
 		$filters = self::filters( array( 'period' => 'custom' ) + $input );
 
 		$this->assertSame( array( 'period' ), $filters->errors() );
-		$this->assertSame( Period::TODAY, $filters->period()->key() );
+		$this->assertSame( Period::DEFAULT_PRESET, $filters->period()->key(), 'A refused custom period falls back to the default.' );
 	}
 
 	/**
@@ -349,6 +351,56 @@ class FiltersTest extends TestCase {
 	}
 
 	/**
+	 * Today is still a choice: it is kept when asked for, and starts at local midnight.
+	 *
+	 * @return void
+	 */
+	public function test_today_can_still_be_chosen(): void {
+		$filters = self::filters( array( 'period' => 'today' ) );
+
+		$this->assertSame( Period::TODAY, $filters->period()->key() );
+		$this->assertSame( '2026-10-01 22:00:00.000', $filters->period()->start_utc() );
+		$this->assertSame( '2026-10-02 12:30:00.000', $filters->period()->end_utc() );
+		$this->assertSame( array(), $filters->errors() );
+	}
+
+	/**
+	 * Every preset can be chosen, whichever one is the default.
+	 *
+	 * @return void
+	 */
+	public function test_every_preset_can_be_chosen(): void {
+		foreach ( Period::PRESETS as $preset ) {
+			$this->assertSame( $preset, self::filters( array( 'period' => $preset ) )->period()->key(), $preset );
+		}
+	}
+
+	/**
+	 * The default period is left out of the URL, and every other one, today included, is written out.
+	 *
+	 * @return void
+	 */
+	public function test_only_the_default_period_is_left_out_of_the_url(): void {
+		$this->assertSame( array(), self::filters( array( 'period' => Period::DEFAULT_PRESET ) )->to_query_args() );
+		$this->assertSame( array(), self::filters( array() )->to_query_args() );
+		$this->assertSame( array( 'period' => 'today' ), self::filters( array( 'period' => 'today' ) )->to_query_args() );
+		$this->assertSame( array( 'period' => 'year' ), self::filters( array( 'period' => 'year' ) )->to_query_args() );
+	}
+
+	/**
+	 * A link built from a chosen "today" reopens "today", not the default.
+	 *
+	 * @return void
+	 */
+	public function test_today_survives_the_round_trip_through_a_link(): void {
+		$args  = self::filters( array( 'period' => 'today', 'outcome' => 'incomplete' ) )->to_query_args();
+		$again = self::filters( $args );
+
+		$this->assertSame( Period::TODAY, $again->period()->key() );
+		$this->assertSame( 'incomplete', $again->outcome() );
+	}
+
+	/**
 	 * The default filters give no URL arguments.
 	 *
 	 * @return void
@@ -364,7 +416,7 @@ class FiltersTest extends TestCase {
 	 */
 	public function test_query_args_round_trip(): void {
 		$input = array(
-			'period'         => 'week',
+			'period'         => 'month',
 			'outcome'        => 'generated',
 			'instance'       => 'site-a',
 			'user_id'        => '42',
@@ -383,7 +435,7 @@ class FiltersTest extends TestCase {
 
 		$this->assertSame(
 			array(
-				'period'         => 'week',
+				'period'         => 'month',
 				'outcome'        => 'generated',
 				'instance'       => 'site-a',
 				'user_id'        => '42',

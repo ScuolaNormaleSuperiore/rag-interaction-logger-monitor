@@ -78,13 +78,13 @@ Per l'intervallo selezionato, mostrare:
 - andamento giornaliero di turni, incomplete e blocchi;
 - link alle viste Interazioni già filtrate.
 
-L'intervallo predefinito è oggi: da mezzanotte nel fuso WordPress fino all'istante corrente. Il selettore offre oggi, ultima settimana, ultimo mese, ultimi 3 mesi, ultimi 6 mesi, ultimo anno e un intervallo personalizzato con data e ora di inizio e fine. Non esiste un limite massimo per l'intervallo personalizzato.
+L'intervallo predefinito è l'ultima settimana: gli ultimi 7 giorni fino all'istante corrente, nel fuso WordPress. Vale anche quando il periodo scelto non è valido. «Oggi» (da mezzanotte nel fuso WordPress fino all'istante corrente) resta una scelta del selettore, che offre oggi, ultima settimana, ultimo mese, ultimi 3 mesi, ultimi 6 mesi, ultimo anno e un intervallo personalizzato con data e ora di inizio e fine. Non esiste un limite massimo per l'intervallo personalizzato.
 
 I valori NULL devono essere distinti dai valori espliciti: verdict NULL significa nessun blocco registrato, mentre other_plugin_reply NULL può indicare Guardrails assente.
 
 ### Elenco Interazioni
 
-Ordinamento predefinito ts DESC e paginazione lato database. L'intervallo predefinito è oggi. Colonne: data/ora locale, esito, instance, user id, durata, stato Guardrails, verdict input/output, anteprima domanda e anteprima risposta consegnata.
+Ordinamento predefinito ts DESC e paginazione lato database. L'intervallo predefinito è l'ultima settimana (come nella Dashboard). Colonne: data/ora locale, esito, instance, user id, durata, stato Guardrails, verdict input/output, anteprima domanda e anteprima risposta consegnata.
 
 Le anteprime sono troncate visivamente ed espandibili senza lasciare l'elenco. Il dettaglio offre sempre la vista completa.
 

@@ -274,6 +274,76 @@ class InteractionsPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Without a chosen period the list shows the last week.
+	 *
+	 * @return void
+	 */
+	public function test_default_period_is_last_week(): void {
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
+		$this->assertMatchesRegularExpression( '/<option value="week" selected=\'selected\'>/', $output );
+	}
+
+	/**
+	 * Today is still in the period select, and choosing it starts at local midnight.
+	 *
+	 * @return void
+	 */
+	public function test_today_can_still_be_chosen(): void {
+		$_GET = array( 'period' => 'today' );
+
+		$output = $this->render( $this->page() );
+
+		$this->assertMatchesRegularExpression( '/<option value="today" selected=\'selected\'>Today<\/option>/', $output );
+		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
+	}
+
+	/**
+	 * The select offers every period, whichever is the default.
+	 *
+	 * @return void
+	 */
+	public function test_period_select_offers_every_period(): void {
+		$output = $this->render( $this->page() );
+
+		foreach ( array( 'today', 'week', 'month', '3months', '6months', 'year', 'custom' ) as $value ) {
+			$this->assertStringContainsString( '<option value="' . $value . '"', $output, $value );
+		}
+	}
+
+	/**
+	 * The redirect for an empty search keeps "today", which is not the default, and omits the default period.
+	 *
+	 * @return void
+	 */
+	public function test_redirect_keeps_today_and_omits_the_default_period(): void {
+		$this->post(
+			array(
+				'period' => 'today',
+				'search' => '',
+			)
+		);
+
+		$page = $this->page();
+		$page->handle_request();
+
+		$this->assertStringContainsString( 'period=today', (string) $page->redirected );
+
+		$this->post(
+			array(
+				'period' => 'week',
+				'search' => '',
+			)
+		);
+
+		$page = $this->page();
+		$page->handle_request();
+
+		$this->assertStringNotContainsString( 'period=', (string) $page->redirected );
+	}
+
+	/**
 	 * Splits a rendered page into what comes before, inside and after the advanced section.
 	 *
 	 * @param string $output Page output.

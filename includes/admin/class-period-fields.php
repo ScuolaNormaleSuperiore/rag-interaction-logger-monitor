@@ -36,6 +36,21 @@ class Period_Fields {
 	}
 
 	/**
+	 * Returns the notice shown when the period in the request is not valid.
+	 *
+	 * It names the period that is shown instead, which is the default one.
+	 *
+	 * @return string Plain text, to be escaped by the caller.
+	 */
+	public static function invalid_period_message(): string {
+		return sprintf(
+			/* translators: %s: name of the default period, e.g. "Last week". */
+			__( 'The period was ignored because its value is not valid: the default period (%s) is shown.', 'rag-interaction-logger-monitor' ),
+			self::options()[ Period::DEFAULT_PRESET ]
+		);
+	}
+
+	/**
 	 * Prints the three fields: preset, start and end of a custom period.
 	 *
 	 * @param Period $period Period currently in use.

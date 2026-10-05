@@ -95,7 +95,7 @@ class Dashboard_Page {
 			<?php
 			if ( in_array( 'period', $filters->errors(), true ) ) {
 				wp_admin_notice(
-					esc_html__( 'The period was ignored because its value is not valid: today is shown.', 'rag-interaction-logger-monitor' ),
+					esc_html( Period_Fields::invalid_period_message() ),
 					array( 'type' => 'warning' )
 				);
 			}
