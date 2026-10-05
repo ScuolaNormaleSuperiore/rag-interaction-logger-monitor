@@ -19,7 +19,7 @@ To run both test suites, use `composer test:all` after completing the integratio
 ## Conventions
 
 - Files end with `Test.php`, live in `tests/unit/`, use the `RILM\Tests\Unit` namespace and extend `PHPUnit\Framework\TestCase`.
-- Classes under test are loaded by the plugin's own autoloader (`includes/class-autoloader.php`, WordPress file naming `class-name.php`; added in phase 1), which `tests/bootstrap-unit.php` requires after `vendor/autoload.php`: no per-class `require`.
+- Classes under test are loaded by the plugin's own autoloader (`includes/class-autoloader.php`, WordPress file naming `class-name.php`), which `tests/bootstrap-unit.php` requires after `vendor/autoload.php`: no per-class `require`.
 - Anything that needs WordPress hooks, the admin menu, capabilities, nonces, the WordPress test database, or plugin bootstrap belongs in `tests/integration/`.
 
 ## Pre-commit

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Enforce the project commit-message rules from DEV/AGENTS/GIT_WORKFLOW.md.
+# Enforce the project commit-message rules.
 set -euo pipefail
 
 message_file="$1"
