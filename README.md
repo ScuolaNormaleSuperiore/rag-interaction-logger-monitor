@@ -64,6 +64,14 @@ The integration suite reads its database from the `WP_TESTS_*` environment varia
 
 Translations: `composer i18n:pot` rebuilds the catalog and `composer i18n:mo` compiles the `.po` files in `languages/`.
 
+## Build
+
+```bash
+composer build
+```
+
+Creates `dist/rag-interaction-logger-monitor-<version>.zip`, ready to install on WordPress. The version is read from the plugin header, so update it there (and in `readme.txt`) before building. The package holds only what the plugin needs at run time: the code, `languages/`, `LICENSE`, `readme.txt` and `uninstall.php`. Everything listed in `.distignore` (tests, Composer files and dependencies, hooks, documents, hidden files) is left out, because the plugin has no run-time dependencies. Rebuild the translation catalogs first if you changed any text (`composer i18n:pot` and `composer i18n:mo`). The PHP `zip` extension is required.
+
 ## License
 
 GPL-3.0-or-later.
