@@ -44,8 +44,9 @@ class Period_Fields {
 	public static function render( Period $period ): void {
 		$is_custom = Period::CUSTOM === $period->key();
 
+		// `aria-controls` names the two date fields that the script shows only for a custom period.
 		printf(
-			'<p class="rilm-field"><label for="rilm-period">%1$s</label> <select id="rilm-period" name="period">',
+			'<p class="rilm-field"><label for="rilm-period">%1$s</label> <select id="rilm-period" name="period" aria-controls="rilm-from rilm-to">',
 			esc_html__( 'Period', 'rag-interaction-logger-monitor' )
 		);
 
@@ -67,6 +68,9 @@ class Period_Fields {
 	/**
 	 * Prints a labelled date and time field.
 	 *
+	 * Without JavaScript the field is always visible, so a custom period can still be
+	 * chosen; `assets/js/admin.js` hides it while the period is not "custom".
+	 *
 	 * @param string $name  Field name and id suffix.
 	 * @param string $label Visible label.
 	 * @param string $value Current value, `Y-m-d\TH:i`.
@@ -74,7 +78,7 @@ class Period_Fields {
 	 */
 	private static function datetime( string $name, string $label, string $value ): void {
 		printf(
-			'<p class="rilm-field"><label for="rilm-%1$s">%2$s</label> <input type="datetime-local" id="rilm-%1$s" name="%1$s" value="%3$s" /></p>',
+			'<p class="rilm-field" data-rilm-custom-date><label for="rilm-%1$s">%2$s</label> <input type="datetime-local" id="rilm-%1$s" name="%1$s" value="%3$s" /></p>',
 			esc_attr( $name ),
 			esc_html( $label ),
 			esc_attr( $value )

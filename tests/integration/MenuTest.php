@@ -59,6 +59,8 @@ class MenuTest extends WP_UnitTestCase {
 	public function tear_down() {
 		wp_dequeue_style( Assets::STYLE_HANDLE );
 		wp_deregister_style( Assets::STYLE_HANDLE );
+		wp_dequeue_script( Assets::SCRIPT_HANDLE );
+		wp_deregister_script( Assets::SCRIPT_HANDLE );
 
 		parent::tear_down();
 	}
@@ -241,6 +243,112 @@ class MenuTest extends WP_UnitTestCase {
 
 		$assets->enqueue( get_plugin_page_hookname( Menu::SLUG_DASHBOARD, '' ) );
 		$this->assertTrue( wp_style_is( Assets::STYLE_HANDLE, 'enqueued' ) );
+	}
+
+	/**
+	 * The interactions form is handled on `load-{page}`, which WordPress runs before any output,
+	 * so the redirect for an empty search can still send its headers.
+	 *
+	 * @return void
+	 */
+	public function test_interactions_form_is_handled_before_any_output(): void {
+		$this->login_as( 'administrator' );
+
+		do_action( 'admin_menu' );
+
+		$hook = get_plugin_page_hookname( Menu::SLUG_INTERACTIONS, Menu::SLUG_DASHBOARD );
+
+		$this->assertNotFalse( has_action( 'load-' . $hook ), 'The page handles its form on load-{page}.' );
+
+		$nonce                     = wp_create_nonce( Interactions_Page::NONCE_ACTION );
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$_POST                     = array(
+			'outcome'                      => 'incomplete',
+			'search'                       => '',
+			Interactions_Page::NONCE_FIELD => $nonce,
+		);
+		$_REQUEST                  = $_POST;
+
+		$location = null;
+
+		// Returning false makes wp_redirect() send nothing, which also keeps the page from exiting.
+		add_filter(
+			'wp_redirect',
+			static function ( $url ) use ( &$location ) {
+				$location = $url;
+				return false;
+			}
+		);
+
+		ob_start();
+		do_action( 'load-' . $hook );
+		$output = ob_get_clean();
+
+		$this->assertSame( '', $output, 'Nothing is printed before the redirect.' );
+		$this->assertNotNull( $location, 'An empty search is redirected to a clean URL.' );
+		$this->assertStringContainsString( 'page=rilm-interactions', $location );
+		$this->assertStringContainsString( 'outcome=incomplete', $location );
+		$this->assertStringNotContainsString( 'search', $location );
+
+		$_POST                     = array();
+		$_REQUEST                  = array();
+		$_SERVER['REQUEST_METHOD'] = 'GET';
+	}
+
+	/**
+	 * Only the interactions page handles a form before output: the other pages have no redirect.
+	 *
+	 * @return void
+	 */
+	public function test_only_the_interactions_page_has_a_load_handler(): void {
+		$this->login_as( 'administrator' );
+
+		do_action( 'admin_menu' );
+
+		foreach ( array( Menu::SLUG_ANOMALIES, Menu::SLUG_SETTINGS ) as $slug ) {
+			$this->assertFalse( has_action( 'load-' . get_plugin_page_hookname( $slug, Menu::SLUG_DASHBOARD ) ), $slug );
+		}
+
+		$this->assertFalse( has_action( 'load-' . get_plugin_page_hookname( Menu::SLUG_DASHBOARD, '' ) ) );
+	}
+
+	/**
+	 * The administration script is enqueued on plugin screens only, in the footer and deferred.
+	 *
+	 * @return void
+	 */
+	public function test_script_is_enqueued_only_on_plugin_screens(): void {
+		$this->login_as( 'administrator' );
+
+		do_action( 'admin_menu' );
+
+		$assets = new Assets( $this->menu );
+
+		$assets->enqueue( 'index.php' );
+		$this->assertFalse( wp_script_is( Assets::SCRIPT_HANDLE, 'enqueued' ) );
+
+		$assets->enqueue( get_plugin_page_hookname( Menu::SLUG_INTERACTIONS, Menu::SLUG_DASHBOARD ) );
+		$this->assertTrue( wp_script_is( Assets::SCRIPT_HANDLE, 'enqueued' ) );
+		$this->assertSame( 1, wp_scripts()->get_data( Assets::SCRIPT_HANDLE, 'group' ), 'The script is loaded in the footer.' );
+		$this->assertSame( 'defer', wp_scripts()->get_data( Assets::SCRIPT_HANDLE, 'strategy' ) );
+		$this->assertStringContainsString( 'assets/js/admin.js', wp_scripts()->registered[ Assets::SCRIPT_HANDLE ]->src );
+		$this->assertSame( RILM_VERSION, wp_scripts()->registered[ Assets::SCRIPT_HANDLE ]->ver );
+	}
+
+	/**
+	 * The script shows the custom dates only for the custom period, and refers to the markup the plugin prints.
+	 *
+	 * @return void
+	 */
+	public function test_script_matches_the_markup_it_controls(): void {
+		$script = (string) file_get_contents( RILM_PLUGIN_DIR . 'assets/js/admin.js' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		$this->assertStringContainsString( "getElementById( 'rilm-period' )", $script );
+		$this->assertStringContainsString( '[data-rilm-custom-date]', $script );
+		$this->assertStringContainsString( "'" . \RILM\Repository\Period::CUSTOM . "' === select.value", $script );
+		$this->assertStringContainsString( 'field.hidden = ! custom', $script );
+		$this->assertStringNotContainsString( 'innerHTML', $script );
+		$this->assertStringNotContainsString( 'eval(', $script );
 	}
 
 	/**

@@ -122,11 +122,17 @@ class Menu {
 			self::SLUG_DASHBOARD
 		);
 
-		$this->add_submenu(
+		$interactions      = new Interactions_Page( $this->connection );
+		$interactions_hook = $this->add_submenu(
 			__( 'Interactions', 'rag-interaction-logger-monitor' ),
 			self::SLUG_INTERACTIONS,
-			array( new Interactions_Page( $this->connection ), 'render' )
+			array( $interactions, 'render' )
 		);
+
+		// The form is handled before the page prints anything, so it can redirect.
+		if ( null !== $interactions_hook ) {
+			add_action( 'load-' . $interactions_hook, array( $interactions, 'handle_request' ) );
+		}
 
 		$this->add_submenu(
 			__( 'Anomalies', 'rag-interaction-logger-monitor' ),
@@ -182,9 +188,9 @@ class Menu {
 	 * @param string   $title    Page and menu title.
 	 * @param string   $slug     Menu slug.
 	 * @param callable $callback Page renderer.
-	 * @return void
+	 * @return string|null Hook suffix of the page, or null when it was not registered.
 	 */
-	private function add_submenu( string $title, string $slug, callable $callback ): void {
+	private function add_submenu( string $title, string $slug, callable $callback ): ?string {
 		$hook_suffix = add_submenu_page(
 			self::SLUG_DASHBOARD,
 			$title,
@@ -194,8 +200,12 @@ class Menu {
 			$callback
 		);
 
-		if ( false !== $hook_suffix ) {
-			$this->hook_suffixes[] = $hook_suffix;
+		if ( false === $hook_suffix ) {
+			return null;
 		}
+
+		$this->hook_suffixes[] = $hook_suffix;
+
+		return $hook_suffix;
 	}
 }

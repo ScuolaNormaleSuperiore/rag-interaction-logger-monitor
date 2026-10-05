@@ -410,6 +410,44 @@ class Filters {
 	}
 
 	/**
+	 * Counts the active filters shown in the "advanced filters" section.
+	 *
+	 * Period, search, Guardrails and the input verdict are always visible and are not
+	 * counted here; neither are sorting and page size, which change the view and not
+	 * the rows that match.
+	 *
+	 * @return int
+	 */
+	public function advanced_count(): int {
+		$count = 0;
+
+		foreach ( array( 'outcome', 'instance', 'user_id', 'output_verdict', 'other_reply' ) as $key ) {
+			if ( isset( $this->values[ $key ] ) ) {
+				++$count;
+			}
+		}
+
+		if ( $this->recall_empty() ) {
+			++$count;
+		}
+
+		if ( $this->answers_differ() ) {
+			++$count;
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Tells whether sorting or page size differ from their defaults.
+	 *
+	 * @return bool
+	 */
+	public function has_custom_view(): bool {
+		return 'ts' !== $this->orderby || 'DESC' !== $this->order || self::PER_PAGE_OPTIONS[0] !== $this->per_page;
+	}
+
+	/**
 	 * Returns the same filters on another page.
 	 *
 	 * @param int $page Page number, from 1.

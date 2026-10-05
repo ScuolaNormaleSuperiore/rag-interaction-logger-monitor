@@ -22,6 +22,11 @@ class Assets {
 	public const STYLE_HANDLE = 'rilm-admin';
 
 	/**
+	 * Handle of the administration script.
+	 */
+	public const SCRIPT_HANDLE = 'rilm-admin';
+
+	/**
 	 * Menu that knows which screens belong to the plugin.
 	 *
 	 * @var Menu
@@ -62,6 +67,17 @@ class Assets {
 			plugins_url( 'assets/css/admin.css', RILM_PLUGIN_FILE ),
 			array(),
 			RILM_VERSION
+		);
+
+		wp_enqueue_script(
+			self::SCRIPT_HANDLE,
+			plugins_url( 'assets/js/admin.js', RILM_PLUGIN_FILE ),
+			array(),
+			RILM_VERSION,
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
 		);
 
 		// The comparison of the two answers uses the core diff table, styled by the core "revisions" stylesheet.

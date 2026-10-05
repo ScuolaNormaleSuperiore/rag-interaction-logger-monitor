@@ -85,7 +85,39 @@ class Interactions_Page {
 	}
 
 	/**
+	 * Handles a submitted form before anything is printed. Runs on `load-{page}`.
+	 *
+	 * A redirect can only be sent while no output has started, and the page callback runs
+	 * after the administration header: this is the place for it. With no search text the
+	 * request leaves POST for a clean, shareable URL that holds only non-sensitive filters.
+	 * With a search the page is drawn from the POST body by render(), so the text never
+	 * reaches a URL.
+	 *
+	 * @return void
+	 */
+	public function handle_request(): void {
+		if ( ! $this->is_post_request() ) {
+			return;
+		}
+
+		Access::require_admin();
+
+		// An invalid or missing nonce stops the request before anything is read or queried.
+		check_admin_referer( self::NONCE_ACTION, self::NONCE_FIELD );
+
+		$filters = Filters::from_array( $this->read_input( true ), call_user_func( $this->clock ) );
+
+		if ( null === $filters->search() ) {
+			$this->redirect( $this->page_url( $filters->to_query_args() ) );
+		}
+	}
+
+	/**
 	 * Renders the page.
+	 *
+	 * It never redirects: output has already started when it runs. A POST without a search
+	 * is normally redirected earlier by handle_request(); if one reaches this point anyway,
+	 * the page is simply drawn from the submitted values.
 	 *
 	 * @return void
 	 */
@@ -101,12 +133,6 @@ class Interactions_Page {
 
 		$now     = call_user_func( $this->clock );
 		$filters = Filters::from_array( $this->read_input( $is_post ), $now );
-
-		// No search: leave POST for a clean, shareable URL that holds only non-sensitive filters.
-		if ( $is_post && null === $filters->search() ) {
-			$this->redirect( $this->page_url( $filters->to_query_args() ) );
-			return;
-		}
 
 		$repository = call_user_func( $this->repository_factory );
 
@@ -165,14 +191,17 @@ class Interactions_Page {
 	}
 
 	/**
-	 * Redirects the browser and stops. Overridable so tests can observe the target.
+	 * Redirects the browser and stops, but only if the redirect was really sent.
+	 *
+	 * Overridable so tests can observe the target.
 	 *
 	 * @param string $url Target URL, inside the administration area.
 	 * @return void
 	 */
 	protected function redirect( string $url ): void {
-		wp_safe_redirect( $url );
-		exit;
+		if ( wp_safe_redirect( $url ) ) {
+			exit;
+		}
 	}
 
 	/**
@@ -267,7 +296,10 @@ class Interactions_Page {
 	}
 
 	/**
-	 * Prints the filter controls. The apply button comes first so Enter applies the filters.
+	 * Prints the filter controls: a few always visible, the others in an expandable section.
+	 *
+	 * The apply button is the first submit button of the form, so Enter in any field
+	 * applies the filters, and it comes after the advanced section.
 	 *
 	 * @param Filters                $filters    Filters of the request.
 	 * @param Interaction_Repository $repository Interactions source, for the value lists.
@@ -280,26 +312,9 @@ class Interactions_Page {
 		$outputs   = $repository->distinct_values( 'output_verdict', $period );
 		?>
 		<div class="rilm-filters">
-			<p class="rilm-filter-actions">
-				<?php submit_button( __( 'Apply filters', 'rag-interaction-logger-monitor' ), 'primary', 'rilm_apply', false ); ?>
-				<a class="button" href="<?php echo esc_url( $this->page_url( array() ) ); ?>"><?php esc_html_e( 'Reset', 'rag-interaction-logger-monitor' ); ?></a>
-			</p>
-
 			<?php
 			Period_Fields::render( $period );
-			$this->field_select(
-				'outcome',
-				__( 'Outcome', 'rag-interaction-logger-monitor' ),
-				array(
-					''           => __( 'All', 'rag-interaction-logger-monitor' ),
-					'generated'  => __( 'Generated', 'rag-interaction-logger-monitor' ),
-					'fast_reply' => __( 'Fast reply', 'rag-interaction-logger-monitor' ),
-					'incomplete' => __( 'Incomplete', 'rag-interaction-logger-monitor' ),
-				),
-				(string) $filters->outcome()
-			);
-			$this->field_select( 'instance', __( 'Instance', 'rag-interaction-logger-monitor' ), $this->value_options( $instances, (string) $filters->instance() ), (string) $filters->instance() );
-			$this->field_text( 'user_id', __( 'User (exact)', 'rag-interaction-logger-monitor' ), (string) $filters->user_id(), 255, 'text' );
+			$this->field_text( self::SEARCH_FIELD, __( 'Search in question and answers', 'rag-interaction-logger-monitor' ), (string) $filters->search(), 200, 'search' );
 			$this->field_select(
 				'guard',
 				__( 'Guardrails', 'rag-interaction-logger-monitor' ),
@@ -311,63 +326,112 @@ class Interactions_Page {
 				(string) $filters->guard()
 			);
 			$this->field_select( 'input_verdict', __( 'Input verdict', 'rag-interaction-logger-monitor' ), $this->verdict_options( $inputs, (string) $filters->input_verdict() ), (string) $filters->input_verdict() );
-			$this->field_select( 'output_verdict', __( 'Output verdict', 'rag-interaction-logger-monitor' ), $this->verdict_options( $outputs, (string) $filters->output_verdict() ), (string) $filters->output_verdict() );
-			$this->field_select(
-				'other_reply',
-				__( 'Other plugin reply', 'rag-interaction-logger-monitor' ),
-				array(
-					''                     => __( 'All', 'rag-interaction-logger-monitor' ),
-					Filters::REPLY_YES     => __( 'Replied', 'rag-interaction-logger-monitor' ),
-					Filters::REPLY_NO      => __( 'Did not reply', 'rag-interaction-logger-monitor' ),
-					Filters::REPLY_UNKNOWN => __( 'Not recorded', 'rag-interaction-logger-monitor' ),
-				),
-				(string) $filters->other_reply()
-			);
+
+			$this->render_advanced_filters( $filters, $instances, $outputs );
 			?>
-			<p class="rilm-field">
-				<input type="checkbox" id="rilm-recall" name="recall" value="empty"<?php checked( $filters->recall_empty() ); ?> />
-				<label for="rilm-recall"><?php esc_html_e( 'Only interactions with an empty recall', 'rag-interaction-logger-monitor' ); ?></label>
+			<p class="rilm-filter-actions">
+				<?php submit_button( __( 'Apply filters', 'rag-interaction-logger-monitor' ), 'primary', 'rilm_apply', false ); ?>
+				<a class="button" href="<?php echo esc_url( $this->page_url( array() ) ); ?>"><?php esc_html_e( 'Reset', 'rag-interaction-logger-monitor' ); ?></a>
 			</p>
-			<p class="rilm-field">
-				<input type="checkbox" id="rilm-answers" name="answers" value="differ"<?php checked( $filters->answers_differ() ); ?> />
-				<label for="rilm-answers"><?php esc_html_e( 'Only interactions where the generated and delivered answers differ', 'rag-interaction-logger-monitor' ); ?></label>
-			</p>
-			<?php
-			$this->field_text( self::SEARCH_FIELD, __( 'Search in question and answers', 'rag-interaction-logger-monitor' ), (string) $filters->search(), 200, 'search' );
-			$this->field_select(
-				'orderby',
-				__( 'Sort by', 'rag-interaction-logger-monitor' ),
-				array(
-					'ts'          => __( 'Date and time', 'rag-interaction-logger-monitor' ),
-					'outcome'     => __( 'Outcome', 'rag-interaction-logger-monitor' ),
-					'instance'    => __( 'Instance', 'rag-interaction-logger-monitor' ),
-					'user_id'     => __( 'User', 'rag-interaction-logger-monitor' ),
-					'duration_ms' => __( 'Duration', 'rag-interaction-logger-monitor' ),
-				),
-				$filters->orderby()
-			);
-			$this->field_select(
-				'order',
-				__( 'Order', 'rag-interaction-logger-monitor' ),
-				array(
-					'DESC' => __( 'Newest or highest first', 'rag-interaction-logger-monitor' ),
-					'ASC'  => __( 'Oldest or lowest first', 'rag-interaction-logger-monitor' ),
-				),
-				$filters->order()
-			);
-			$this->field_select(
-				'per_page',
-				__( 'Rows per page', 'rag-interaction-logger-monitor' ),
-				array_combine( array_map( 'strval', Filters::PER_PAGE_OPTIONS ), array_map( 'strval', Filters::PER_PAGE_OPTIONS ) ),
-				(string) $filters->per_page()
-			);
-			?>
 			<p class="description">
-				<?php
-				esc_html_e( 'The search text is sent in the request body and never appears in the address bar.', 'rag-interaction-logger-monitor' );
-				?>
+				<?php esc_html_e( 'The search text is sent in the request body and never appears in the address bar.', 'rag-interaction-logger-monitor' ); ?>
 			</p>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Prints the advanced filters in a native, keyboard-operable expandable section.
+	 *
+	 * The section opens by itself when one of its filters is active, or when the sort order
+	 * or the page size is not the default, so nothing that changes the rows or their order
+	 * stays hidden. Its fields belong to the same form: a closed section still submits them.
+	 *
+	 * @param Filters  $filters   Filters of the request.
+	 * @param string[] $instances Instances found in the period.
+	 * @param string[] $outputs   Output verdicts found in the period.
+	 * @return void
+	 */
+	private function render_advanced_filters( Filters $filters, array $instances, array $outputs ): void {
+		$active = $filters->advanced_count();
+		$open   = $active > 0 || $filters->has_custom_view();
+		$title  = $active > 0
+			? sprintf(
+				/* translators: %d: number of active advanced filters. */
+				__( 'Advanced filters (%d active)', 'rag-interaction-logger-monitor' ),
+				$active
+			)
+			: __( 'Advanced filters', 'rag-interaction-logger-monitor' );
+		?>
+		<details class="rilm-advanced"<?php echo $open ? ' open' : ''; ?>>
+			<summary><?php echo esc_html( $title ); ?></summary>
+			<div class="rilm-advanced-fields">
+				<?php
+				$this->field_select(
+					'outcome',
+					__( 'Outcome', 'rag-interaction-logger-monitor' ),
+					array(
+						''           => __( 'All', 'rag-interaction-logger-monitor' ),
+						'generated'  => __( 'Generated', 'rag-interaction-logger-monitor' ),
+						'fast_reply' => __( 'Fast reply', 'rag-interaction-logger-monitor' ),
+						'incomplete' => __( 'Incomplete', 'rag-interaction-logger-monitor' ),
+					),
+					(string) $filters->outcome()
+				);
+				$this->field_select( 'instance', __( 'Instance', 'rag-interaction-logger-monitor' ), $this->value_options( $instances, (string) $filters->instance() ), (string) $filters->instance() );
+				$this->field_text( 'user_id', __( 'User (exact)', 'rag-interaction-logger-monitor' ), (string) $filters->user_id(), 255, 'text' );
+				$this->field_select( 'output_verdict', __( 'Output verdict', 'rag-interaction-logger-monitor' ), $this->verdict_options( $outputs, (string) $filters->output_verdict() ), (string) $filters->output_verdict() );
+				$this->field_select(
+					'other_reply',
+					__( 'Other plugin reply', 'rag-interaction-logger-monitor' ),
+					array(
+						''                     => __( 'All', 'rag-interaction-logger-monitor' ),
+						Filters::REPLY_YES     => __( 'Replied', 'rag-interaction-logger-monitor' ),
+						Filters::REPLY_NO      => __( 'Did not reply', 'rag-interaction-logger-monitor' ),
+						Filters::REPLY_UNKNOWN => __( 'Not recorded', 'rag-interaction-logger-monitor' ),
+					),
+					(string) $filters->other_reply()
+				);
+				?>
+				<p class="rilm-field">
+					<input type="checkbox" id="rilm-recall" name="recall" value="empty"<?php checked( $filters->recall_empty() ); ?> />
+					<label for="rilm-recall"><?php esc_html_e( 'Only interactions with an empty recall', 'rag-interaction-logger-monitor' ); ?></label>
+				</p>
+				<p class="rilm-field">
+					<input type="checkbox" id="rilm-answers" name="answers" value="differ"<?php checked( $filters->answers_differ() ); ?> />
+					<label for="rilm-answers"><?php esc_html_e( 'Only interactions where the generated and delivered answers differ', 'rag-interaction-logger-monitor' ); ?></label>
+				</p>
+				<?php
+				$this->field_select(
+					'orderby',
+					__( 'Sort by', 'rag-interaction-logger-monitor' ),
+					array(
+						'ts'          => __( 'Date and time', 'rag-interaction-logger-monitor' ),
+						'outcome'     => __( 'Outcome', 'rag-interaction-logger-monitor' ),
+						'instance'    => __( 'Instance', 'rag-interaction-logger-monitor' ),
+						'user_id'     => __( 'User', 'rag-interaction-logger-monitor' ),
+						'duration_ms' => __( 'Duration', 'rag-interaction-logger-monitor' ),
+					),
+					$filters->orderby()
+				);
+				$this->field_select(
+					'order',
+					__( 'Order', 'rag-interaction-logger-monitor' ),
+					array(
+						'DESC' => __( 'Newest or highest first', 'rag-interaction-logger-monitor' ),
+						'ASC'  => __( 'Oldest or lowest first', 'rag-interaction-logger-monitor' ),
+					),
+					$filters->order()
+				);
+				$this->field_select(
+					'per_page',
+					__( 'Rows per page', 'rag-interaction-logger-monitor' ),
+					array_combine( array_map( 'strval', Filters::PER_PAGE_OPTIONS ), array_map( 'strval', Filters::PER_PAGE_OPTIONS ) ),
+					(string) $filters->per_page()
+				);
+				?>
+			</div>
+		</details>
 		<?php
 	}
 

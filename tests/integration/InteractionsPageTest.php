@@ -268,9 +268,250 @@ class InteractionsPageTest extends WP_UnitTestCase {
 		);
 
 		$page = $this->page();
-		$this->render( $page );
+		$page->handle_request();
 
 		$this->assertStringContainsString( 'answers=differ', (string) $page->redirected );
+	}
+
+	/**
+	 * Splits a rendered page into what comes before, inside and after the advanced section.
+	 *
+	 * @param string $output Page output.
+	 * @return array{0: string, 1: string, 2: string}
+	 */
+	private function split_advanced( string $output ): array {
+		$start = strpos( $output, '<details class="rilm-advanced"' );
+		$this->assertNotFalse( $start, 'The advanced section is missing.' );
+
+		$end = strpos( $output, '</details>', (int) $start );
+		$this->assertNotFalse( $end, 'The advanced section is not closed.' );
+
+		return array(
+			substr( $output, 0, (int) $start ),
+			substr( $output, (int) $start, (int) $end - (int) $start ),
+			substr( $output, (int) $end ),
+		);
+	}
+
+	/**
+	 * Period, search, Guardrails and the input verdict stay outside the advanced section.
+	 *
+	 * @return void
+	 */
+	public function test_main_filters_are_always_visible(): void {
+		list( $before, $inside, $after ) = $this->split_advanced( $this->render( $this->page() ) );
+
+		foreach ( array( 'period', 'from', 'to', 'search', 'guard', 'input_verdict' ) as $name ) {
+			$this->assertStringContainsString( 'id="rilm-' . $name . '"', $before, $name );
+			$this->assertStringNotContainsString( 'id="rilm-' . $name . '"', $inside, $name );
+			$this->assertStringNotContainsString( 'id="rilm-' . $name . '"', $after, $name );
+		}
+	}
+
+	/**
+	 * Every other control is inside the advanced section.
+	 *
+	 * @return void
+	 */
+	public function test_other_controls_are_in_the_advanced_section(): void {
+		list( $before, $inside, $after ) = $this->split_advanced( $this->render( $this->page() ) );
+
+		foreach ( array( 'outcome', 'instance', 'user_id', 'output_verdict', 'other_reply', 'recall', 'answers', 'orderby', 'order', 'per_page' ) as $name ) {
+			$this->assertStringContainsString( 'id="rilm-' . $name . '"', $inside, $name );
+			$this->assertStringNotContainsString( 'id="rilm-' . $name . '"', $before, $name );
+			$this->assertStringNotContainsString( 'id="rilm-' . $name . '"', $after, $name );
+		}
+	}
+
+	/**
+	 * The section is closed, and its title shows no count, when nothing in it is active.
+	 *
+	 * @return void
+	 */
+	public function test_advanced_section_is_closed_by_default(): void {
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '<details class="rilm-advanced">', $output );
+		$this->assertStringContainsString( '<summary>Advanced filters</summary>', $output );
+	}
+
+	/**
+	 * Any active advanced filter opens the section and is counted in its title.
+	 *
+	 * @dataProvider provide_advanced_request_filters
+	 *
+	 * @param array $query Query arguments holding one advanced filter.
+	 * @return void
+	 */
+	public function test_active_advanced_filter_opens_the_section( array $query ): void {
+		$_GET = $query;
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '<details class="rilm-advanced" open>', $output );
+		$this->assertStringContainsString( '<summary>Advanced filters (1 active)</summary>', $output );
+	}
+
+	/**
+	 * Provides one advanced filter at a time.
+	 *
+	 * @return array<string, array{array}>
+	 */
+	public static function provide_advanced_request_filters(): array {
+		return array(
+			'outcome'        => array( array( 'outcome' => 'generated' ) ),
+			'instance'       => array( array( 'instance' => 'site-a' ) ),
+			'user'           => array( array( 'user_id' => '42' ) ),
+			'output verdict' => array( array( 'output_verdict' => '__any__' ) ),
+			'other reply'    => array( array( 'other_reply' => 'yes' ) ),
+			'empty recall'   => array( array( 'recall' => 'empty' ) ),
+			'answers differ' => array( array( 'answers' => 'differ' ) ),
+		);
+	}
+
+	/**
+	 * A sort order or page size that is not the default opens the section too, without being counted.
+	 *
+	 * @dataProvider provide_view_settings
+	 *
+	 * @param array $query Query arguments holding one view setting.
+	 * @return void
+	 */
+	public function test_custom_view_opens_the_section_without_a_count( array $query ): void {
+		$_GET = $query;
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '<details class="rilm-advanced" open>', $output );
+		$this->assertStringContainsString( '<summary>Advanced filters</summary>', $output );
+	}
+
+	/**
+	 * Provides view settings that differ from the defaults.
+	 *
+	 * @return array<string, array{array}>
+	 */
+	public static function provide_view_settings(): array {
+		return array(
+			'sort by'  => array( array( 'orderby' => 'duration_ms' ) ),
+			'order'    => array( array( 'order' => 'ASC' ) ),
+			'per page' => array( array( 'per_page' => '50' ) ),
+		);
+	}
+
+	/**
+	 * The title counts every active advanced filter.
+	 *
+	 * @return void
+	 */
+	public function test_title_counts_every_active_filter(): void {
+		$_GET = array(
+			'outcome' => 'incomplete',
+			'user_id' => '42',
+			'recall'  => 'empty',
+			'answers' => 'differ',
+		);
+
+		$this->assertStringContainsString( '<summary>Advanced filters (4 active)</summary>', $this->render( $this->page() ) );
+	}
+
+	/**
+	 * Filters that are always visible neither open the section nor count in its title.
+	 *
+	 * @return void
+	 */
+	public function test_main_filters_do_not_open_the_section(): void {
+		$_GET = array(
+			'period'        => 'week',
+			'guard'         => 'absent',
+			'input_verdict' => '__any__',
+		);
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '<details class="rilm-advanced">', $output );
+		$this->assertStringContainsString( '<summary>Advanced filters</summary>', $output );
+	}
+
+	/**
+	 * With a search active the page has the same layout and still opens the section.
+	 *
+	 * @return void
+	 */
+	public function test_search_mode_has_the_same_layout(): void {
+		$this->post(
+			array(
+				'search'  => 'opening',
+				'outcome' => 'incomplete',
+			)
+		);
+
+		list( $before, $inside ) = $this->split_advanced( $this->render( $this->page() ) );
+
+		$this->assertStringContainsString( 'id="rilm-search"', $before );
+		$this->assertStringContainsString( '<details class="rilm-advanced" open>', $before . $inside );
+		$this->assertStringContainsString( '<summary>Advanced filters (1 active)</summary>', $inside );
+	}
+
+	/**
+	 * The advanced fields belong to the form, so a closed section still submits them.
+	 *
+	 * @return void
+	 */
+	public function test_advanced_section_is_inside_the_form(): void {
+		$output = $this->render( $this->page() );
+
+		$form_start = strpos( $output, '<form method="post"' );
+		$details    = strpos( $output, '<details class="rilm-advanced"' );
+		$details_end = strpos( $output, '</details>', (int) $details );
+		$form_end   = strpos( $output, '</form>', (int) $form_start );
+
+		$this->assertTrue( $form_start < $details && $details_end < $form_end );
+		$this->assertSame( 1, substr_count( $output, '<form method="post"' ), 'There is a single form.' );
+	}
+
+	/**
+	 * Apply and Reset come after the advanced section and before the table, and Apply is still the first submit button.
+	 *
+	 * @return void
+	 */
+	public function test_buttons_follow_the_advanced_section(): void {
+		$this->reader->rows = array( array( $this->row() ) );
+
+		$output = $this->render( $this->page() );
+
+		$details_end = strpos( $output, '</details>', (int) strpos( $output, '<details class="rilm-advanced"' ) );
+		$apply       = strpos( $output, 'name="rilm_apply"' );
+		$reset       = strpos( $output, '>Reset</a>' );
+		$table       = strpos( $output, 'class="wp-list-table' );
+		$first       = strpos( $output, 'type="submit"' );
+
+		$this->assertTrue( $details_end < $apply && $apply < $reset && $reset < $table );
+		$this->assertStringContainsString( 'name="rilm_apply"', substr( $output, (int) $first, 60 ), 'The first submit button is Apply, so Enter applies the filters.' );
+	}
+
+	/**
+	 * The period select names the two custom date fields it controls.
+	 *
+	 * @return void
+	 */
+	public function test_period_select_controls_the_custom_dates(): void {
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( 'name="period" aria-controls="rilm-from rilm-to"', $output );
+		$this->assertSame( 2, substr_count( $output, 'data-rilm-custom-date' ) );
+	}
+
+	/**
+	 * The server never hides the custom dates: without the script they must stay usable.
+	 *
+	 * @return void
+	 */
+	public function test_custom_dates_are_visible_without_the_script(): void {
+		$output = $this->render( $this->page() );
+
+		$this->assertDoesNotMatchRegularExpression( '/data-rilm-custom-date[^>]*\bhidden\b/', $output );
+		$this->assertDoesNotMatchRegularExpression( '/<p[^>]*\bhidden\b[^>]*>\s*<label for="rilm-(from|to)"/', $output );
 	}
 
 	/**
@@ -522,10 +763,13 @@ class InteractionsPageTest extends WP_UnitTestCase {
 			)
 		);
 
-		$page   = $this->page();
-		$output = $this->render( $page );
+		$page = $this->page();
 
-		$this->assertSame( '', $output );
+		ob_start();
+		$page->handle_request();
+		$output = ob_get_clean();
+
+		$this->assertSame( '', $output, 'Nothing is printed, so the redirect can still send its headers.' );
 		$this->assertSame( array(), $this->reader->queries, 'Nothing is queried before the redirect.' );
 		$this->assertNotNull( $page->redirected );
 		$this->assertStringContainsString( 'page=rilm-interactions', $page->redirected );
@@ -552,10 +796,144 @@ class InteractionsPageTest extends WP_UnitTestCase {
 		);
 
 		$page = $this->page();
-		$this->render( $page );
+		$page->handle_request();
 
-		$this->assertSame( 'someone', rawurldecode( (string) wp_parse_url( $page->redirected, PHP_URL_QUERY ) ) === '' ? '' : 'someone' );
-		$this->assertStringContainsString( 'user_id=someone', $page->redirected );
+		parse_str( (string) wp_parse_url( (string) $page->redirected, PHP_URL_QUERY ), $args );
+
+		$this->assertSame(
+			array(
+				'page'    => 'rilm-interactions',
+				'user_id' => 'someone',
+			),
+			$args,
+			'Only the page and the non-sensitive filter are in the URL.'
+		);
+	}
+
+	/**
+	 * Drawing the page never redirects: output has already started when it runs.
+	 *
+	 * @dataProvider provide_request_kinds
+	 *
+	 * @param array $post Form fields; null means a plain GET.
+	 * @return void
+	 */
+	public function test_render_never_redirects( ?array $post ): void {
+		if ( null !== $post ) {
+			$this->post( $post );
+		}
+
+		$page   = $this->page();
+		$output = $this->render( $page );
+
+		$this->assertNull( $page->redirected, 'render() must not redirect.' );
+		$this->assertStringContainsString( '<h1>Interactions</h1>', $output );
+	}
+
+	/**
+	 * Provides a GET and the POSTs with and without a search.
+	 *
+	 * @return array<string, array{array|null}>
+	 */
+	public static function provide_request_kinds(): array {
+		return array(
+			'get'                   => array( null ),
+			'post with search'      => array( array( 'search' => 'opening' ) ),
+			'post without search'   => array( array( 'search' => '' ) ),
+			'post with blank search' => array( array( 'search' => '   ' ) ),
+		);
+	}
+
+	/**
+	 * A POST without a search that reaches render() anyway is drawn from the submitted values.
+	 *
+	 * @return void
+	 */
+	public function test_render_draws_a_post_without_search_from_the_submitted_values(): void {
+		$this->post(
+			array(
+				'outcome' => 'incomplete',
+				'search'  => '',
+			)
+		);
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( "outcome = 'incomplete'", $this->reader->queries[0] );
+		$this->assertMatchesRegularExpression( '/<option value="incomplete" selected=\'selected\'>/', $output );
+	}
+
+	/**
+	 * A GET is not handled: no redirect, nothing queried.
+	 *
+	 * @return void
+	 */
+	public function test_handle_request_ignores_a_get(): void {
+		$_GET = array( 'outcome' => 'generated' );
+
+		$page = $this->page();
+		$page->handle_request();
+
+		$this->assertNull( $page->redirected );
+		$this->assertSame( array(), $this->reader->queries );
+	}
+
+	/**
+	 * A POST with a search is left to render(): no redirect, so the text never reaches a URL.
+	 *
+	 * @return void
+	 */
+	public function test_handle_request_does_not_redirect_a_search(): void {
+		$this->post( array( 'search' => 'confidential phrase' ) );
+
+		$page = $this->page();
+		$page->handle_request();
+
+		$this->assertNull( $page->redirected );
+		$this->assertSame( array(), $this->reader->queries );
+	}
+
+	/**
+	 * An invalid nonce stops the request before anything is queried or redirected.
+	 *
+	 * @return void
+	 */
+	public function test_handle_request_refuses_a_bad_nonce(): void {
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$_POST                     = array(
+			'search'                       => '',
+			Interactions_Page::NONCE_FIELD => 'invalid',
+		);
+		$_REQUEST                  = $_POST;
+
+		$page = $this->page();
+
+		try {
+			$page->handle_request();
+			$this->fail( 'The request must be refused.' );
+		} catch ( WPDieException $exception ) {
+			$this->assertNull( $page->redirected );
+			$this->assertSame( array(), $this->reader->queries );
+		}
+	}
+
+	/**
+	 * A user without manage_options is refused before the form is handled.
+	 *
+	 * @return void
+	 */
+	public function test_handle_request_refuses_users_without_capability(): void {
+		$this->post( array( 'search' => '' ) );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'editor' ) ) );
+
+		$page = $this->page();
+
+		try {
+			$page->handle_request();
+			$this->fail( 'The request must be refused.' );
+		} catch ( WPDieException $exception ) {
+			$this->assertNull( $page->redirected );
+		}
 	}
 
 	/**

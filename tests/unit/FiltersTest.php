@@ -484,6 +484,147 @@ class FiltersTest extends TestCase {
 	}
 
 	/**
+	 * Without filters nothing is active in the advanced section.
+	 *
+	 * @return void
+	 */
+	public function test_no_advanced_filter_is_active_by_default(): void {
+		$this->assertSame( 0, self::filters( array() )->advanced_count() );
+		$this->assertFalse( self::filters( array() )->has_custom_view() );
+	}
+
+	/**
+	 * Each advanced filter counts once.
+	 *
+	 * @dataProvider provide_advanced_filters
+	 *
+	 * @param array $input Raw values holding one advanced filter.
+	 * @return void
+	 */
+	public function test_each_advanced_filter_counts_once( array $input ): void {
+		$this->assertSame( 1, self::filters( $input )->advanced_count() );
+	}
+
+	/**
+	 * Provides one advanced filter at a time.
+	 *
+	 * @return array<string, array{array}>
+	 */
+	public static function provide_advanced_filters(): array {
+		return array(
+			'outcome'        => array( array( 'outcome' => 'generated' ) ),
+			'instance'       => array( array( 'instance' => 'site-a' ) ),
+			'user'           => array( array( 'user_id' => '42' ) ),
+			'output verdict' => array( array( 'output_verdict' => Filters::VERDICT_ANY ) ),
+			'other reply'    => array( array( 'other_reply' => 'unknown' ) ),
+			'empty recall'   => array( array( 'recall' => 'empty' ) ),
+			'answers differ' => array( array( 'answers' => 'differ' ) ),
+		);
+	}
+
+	/**
+	 * Several advanced filters add up.
+	 *
+	 * @return void
+	 */
+	public function test_advanced_filters_add_up(): void {
+		$filters = self::filters(
+			array(
+				'outcome'        => 'incomplete',
+				'user_id'        => '42',
+				'output_verdict' => Filters::VERDICT_NONE,
+				'recall'         => 'empty',
+				'answers'        => 'differ',
+			)
+		);
+
+		$this->assertSame( 5, $filters->advanced_count() );
+	}
+
+	/**
+	 * The filters that are always visible, the search and the view settings are not advanced filters.
+	 *
+	 * @return void
+	 */
+	public function test_visible_filters_and_view_settings_are_not_counted(): void {
+		$filters = self::filters(
+			array(
+				'period'        => 'week',
+				'guard'         => 'absent',
+				'input_verdict' => Filters::VERDICT_ANY,
+				'search'        => 'hello',
+				'orderby'       => 'duration_ms',
+				'order'         => 'ASC',
+				'per_page'      => '50',
+				'paged'         => '3',
+			)
+		);
+
+		$this->assertSame( 0, $filters->advanced_count() );
+	}
+
+	/**
+	 * A value that is not valid is dropped, so it does not count.
+	 *
+	 * @return void
+	 */
+	public function test_invalid_values_are_not_counted(): void {
+		$filters = self::filters(
+			array(
+				'outcome'     => 'deleted',
+				'other_reply' => 'maybe',
+				'recall'      => 'yes',
+				'answers'     => 'same',
+				'instance'    => '   ',
+			)
+		);
+
+		$this->assertSame( 0, $filters->advanced_count() );
+	}
+
+	/**
+	 * Sorting or page size that differ from the defaults are a custom view.
+	 *
+	 * @dataProvider provide_custom_views
+	 *
+	 * @param array $input Raw values.
+	 * @return void
+	 */
+	public function test_custom_view( array $input ): void {
+		$filters = self::filters( $input );
+
+		$this->assertTrue( $filters->has_custom_view() );
+		$this->assertSame( 0, $filters->advanced_count(), 'A custom view is not an advanced filter.' );
+	}
+
+	/**
+	 * Provides view settings that differ from the defaults.
+	 *
+	 * @return array<string, array{array}>
+	 */
+	public static function provide_custom_views(): array {
+		return array(
+			'sort column'     => array( array( 'orderby' => 'duration_ms' ) ),
+			'ascending order' => array( array( 'order' => 'ASC' ) ),
+			'bigger page'     => array( array( 'per_page' => '50' ) ),
+			'biggest page'    => array( array( 'per_page' => '100' ) ),
+		);
+	}
+
+	/**
+	 * The defaults, written out or implied, are not a custom view.
+	 *
+	 * @return void
+	 */
+	public function test_default_view_values_are_not_custom(): void {
+		$this->assertFalse( self::filters( array( 'orderby' => 'ts' ) )->has_custom_view() );
+		$this->assertFalse( self::filters( array( 'order' => 'DESC' ) )->has_custom_view() );
+		$this->assertFalse( self::filters( array( 'per_page' => '20' ) )->has_custom_view() );
+		$this->assertFalse( self::filters( array( 'orderby' => 'nonsense', 'order' => 'sideways', 'per_page' => '37' ) )->has_custom_view(), 'Invalid values fall back to the defaults.' );
+		$this->assertFalse( self::filters( array( 'paged' => '4' ) )->has_custom_view(), 'The page number is not a view setting.' );
+	}
+
+	/**
 	 * Unicode text is preserved.
 	 *
 	 * @return void

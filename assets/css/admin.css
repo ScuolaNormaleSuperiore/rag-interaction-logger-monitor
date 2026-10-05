@@ -46,6 +46,36 @@
 	max-width: 100%;
 }
 
+/* Advanced filters: a native expandable section that spans the whole filter box. */
+.rilm-filters .rilm-advanced {
+	grid-column: 1 / -1;
+	margin: 8px 0;
+	border-top: 1px solid #dcdcde;
+	padding-top: 8px;
+}
+
+.rilm-filters .rilm-advanced summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.rilm-filters .rilm-advanced summary:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+.rilm-filters .rilm-advanced-fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 4px 24px;
+	margin-top: 8px;
+}
+
+/* The script hides the custom dates until the period is "custom". */
+.rilm-filters .rilm-field[hidden] {
+	display: none;
+}
+
 /* Dashboard: headline figures, verdict tables side by side, daily charts. */
 .rilm-tiles {
 	display: grid;
