@@ -271,7 +271,6 @@ class Detail_Page {
 			__( 'Tools used', 'rag-interaction-logger-monitor' )    => $interaction->tools_used,
 			__( 'Tool input', 'rag-interaction-logger-monitor' )    => $interaction->tool_input,
 			__( 'Tool output', 'rag-interaction-logger-monitor' )   => $interaction->tool_output,
-			__( 'Recall sources', 'rag-interaction-logger-monitor' ) => $interaction->recall_sources,
 		);
 
 		foreach ( $sections as $title => $text ) {
@@ -285,6 +284,119 @@ class Detail_Page {
 				esc_html( $text )
 			);
 		}
+
+		if ( null !== $interaction->recall_sources ) {
+			$this->render_recall_sources( $interaction->recall_sources );
+		}
+	}
+
+	/**
+	 * Prints recalled-document metadata, linking only safe web sources.
+	 *
+	 * Current versions of RAG Interaction Logger store this field as a JSON array
+	 * containing an id, a source (file name or URL), and a score. Older logger
+	 * versions may have stored another representation, which remains visible as
+	 * escaped plain text instead of being discarded.
+	 *
+	 * @param string $sources Stored recall sources.
+	 * @return void
+	 */
+	private function render_recall_sources( string $sources ): void {
+		$items = json_decode( $sources, true );
+
+		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $items ) || ! array_is_list( $items ) ) {
+			$this->render_optional_text( __( 'Recall sources', 'rag-interaction-logger-monitor' ), $sources );
+			return;
+		}
+
+		printf(
+			'<details class="rilm-details"><summary>%s</summary><ul class="rilm-recall-sources">',
+			esc_html__( 'Recall sources', 'rag-interaction-logger-monitor' )
+		);
+
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$this->render_recall_source( $item );
+		}
+
+		echo '</ul></details>';
+	}
+
+	/**
+	 * Prints one recalled document.
+	 *
+	 * @param array<string, mixed> $item Recalled-document metadata.
+	 * @return void
+	 */
+	private function render_recall_source( array $item ): void {
+		$id     = isset( $item['id'] ) && is_scalar( $item['id'] ) ? (string) $item['id'] : '';
+		$source = isset( $item['source'] ) && is_string( $item['source'] ) ? $item['source'] : '';
+		$score  = isset( $item['score'] ) && is_numeric( $item['score'] ) ? (float) $item['score'] : null;
+
+		echo '<li>';
+
+		if ( '' !== $id ) {
+			printf(
+				'<strong>%1$s:</strong> %2$s ',
+				esc_html__( 'ID', 'rag-interaction-logger-monitor' ),
+				esc_html( $id )
+			);
+		}
+
+		if ( '' !== $source ) {
+			if ( $this->is_web_url( $source ) ) {
+				printf(
+					'<a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a> ',
+					esc_url( $source ),
+					esc_html( $source )
+				);
+			} else {
+				echo esc_html( $source ) . ' ';
+			}
+		}
+
+		if ( null !== $score ) {
+			printf(
+				'<span class="description">%1$s: %2$s</span>',
+				esc_html__( 'Score', 'rag-interaction-logger-monitor' ),
+				esc_html( number_format_i18n( $score, 6 ) )
+			);
+		}
+
+		echo '</li>';
+	}
+
+	/**
+	 * Checks whether a source is an absolute HTTP or HTTPS URL.
+	 *
+	 * @param string $source Source value from the external database.
+	 * @return bool
+	 */
+	private function is_web_url( string $source ): bool {
+		$parts = wp_parse_url( $source );
+
+		return is_array( $parts )
+			&& isset( $parts['scheme'], $parts['host'] )
+			&& is_string( $parts['scheme'] )
+			&& in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true );
+	}
+
+	/**
+	 * Prints an optional column as escaped plain text.
+	 *
+	 * @param string $title Section title.
+	 * @param string $text  Column value.
+	 * @return void
+	 */
+	private function render_optional_text( string $title, string $text ): void {
+		printf(
+			'<details class="rilm-details"><summary>%1$s</summary><div class="rilm-text rilm-full-text">%2$s</div></details>',
+			esc_html( $title ),
+			esc_html( $text )
+		);
 	}
 
 	/**

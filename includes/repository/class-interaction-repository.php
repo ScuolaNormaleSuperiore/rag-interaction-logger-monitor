@@ -433,7 +433,7 @@ class Interaction_Repository {
 	}
 
 	/**
-	 * Returns the number of turns, incomplete turns and blocks for each UTC hour of a period.
+	 * Returns the number of turns, incomplete turns, blocks and, when available, tool turns for each UTC hour of a period.
 	 *
 	 * The hour is cut from the stored UTC timestamp with `LEFT()`, not formatted with
 	 * `DATE_FORMAT()`: its `%d` would be read as a placeholder by `prepare()`. Grouping
@@ -441,11 +441,15 @@ class Interaction_Repository {
 	 * which keeps daylight saving changes correct without time zone tables in the database.
 	 *
 	 * @param Period $period Period to look into.
-	 * @return array<int, array{hour: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int}>|null Null when the query failed.
+	 * @return array<int, array{hour: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int, tools?: int}>|null Null when the query failed.
 	 */
 	public function hourly_series( Period $period ): ?array {
+		$tools_select = $this->supports_tools()
+			? ", SUM( CASE WHEN ( tools_used IS NOT NULL AND TRIM( tools_used ) <> '' ) THEN 1 ELSE 0 END ) AS tools"
+			: '';
+
 		$query = $this->db->prepare(
-			"SELECT LEFT( ts, 13 ) AS hour, COUNT(*) AS turns, SUM( CASE WHEN outcome = 'incomplete' THEN 1 ELSE 0 END ) AS incomplete, SUM( CASE WHEN input_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS input_blocks, SUM( CASE WHEN output_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS output_blocks FROM " . $this->table . ' WHERE ts >= %s AND ts <= %s GROUP BY LEFT( ts, 13 ) ORDER BY hour ASC',
+			"SELECT LEFT( ts, 13 ) AS hour, COUNT(*) AS turns, SUM( CASE WHEN outcome = 'incomplete' THEN 1 ELSE 0 END ) AS incomplete, SUM( CASE WHEN input_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS input_blocks, SUM( CASE WHEN output_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS output_blocks" . $tools_select . ' FROM ' . $this->table . ' WHERE ts >= %s AND ts <= %s GROUP BY LEFT( ts, 13 ) ORDER BY hour ASC',
 			array( $period->start_utc(), $period->end_utc() )
 		);
 
@@ -462,13 +466,19 @@ class Interaction_Repository {
 				continue;
 			}
 
-			$series[] = array(
+			$hour = array(
 				'hour'          => (string) $row['hour'],
 				'turns'         => (int) ( $row['turns'] ?? 0 ),
 				'incomplete'    => (int) ( $row['incomplete'] ?? 0 ),
 				'input_blocks'  => (int) ( $row['input_blocks'] ?? 0 ),
 				'output_blocks' => (int) ( $row['output_blocks'] ?? 0 ),
 			);
+
+			if ( $this->supports_tools() ) {
+				$hour['tools'] = (int) ( $row['tools'] ?? 0 );
+			}
+
+			$series[] = $hour;
 		}
 
 		return $series;

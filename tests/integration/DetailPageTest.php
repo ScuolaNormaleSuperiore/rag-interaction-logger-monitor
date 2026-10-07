@@ -587,6 +587,82 @@ class DetailPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Recall-source JSON is shown as document metadata and web sources are linked.
+	 *
+	 * @return void
+	 */
+	public function test_recall_source_urls_are_linked_and_other_sources_stay_text(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"id":"doc-1","source":"https://example.org/guide?a=1&b=2","score":0.875},{"id":"doc-2","source":"guide.pdf","score":0.5}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringContainsString( '<ul class="rilm-recall-sources">', $output );
+		$this->assertStringContainsString( '<strong>ID:</strong> doc-1', $output );
+		$this->assertStringContainsString( 'href="https://example.org/guide?a=1&#038;b=2"', $output );
+		$this->assertStringContainsString( 'target="_blank" rel="noopener noreferrer"', $output );
+		$this->assertStringContainsString( '>https://example.org/guide?a=1&amp;b=2</a>', $output );
+		$this->assertStringContainsString( '<strong>ID:</strong> doc-2 guide.pdf', $output );
+		$this->assertStringContainsString( 'Score: 0.875000', $output );
+		$this->assertStringContainsString( 'Score: 0.500000', $output );
+		$this->assertStringNotContainsString( 'href="guide.pdf"', $output );
+	}
+
+	/**
+	 * Recall sources that are not logger JSON remain safely visible as text.
+	 *
+	 * @return void
+	 */
+	public function test_invalid_recall_source_json_falls_back_to_escaped_text(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => 'javascript:alert(1) <script>alert(2)</script>',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringNotContainsString( 'href="javascript:alert(1)"', $output );
+		$this->assertStringNotContainsString( '<script>', $output );
+		$this->assertStringContainsString( 'javascript:alert(1) &lt;script&gt;alert(2)&lt;/script&gt;', $output );
+	}
+
+	/**
+	 * Non-web schemes in otherwise valid logger JSON are never links.
+	 *
+	 * @return void
+	 */
+	public function test_recall_source_links_are_limited_to_http_and_https(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"source":"javascript:alert(1)"},{"source":"file:///private/guide.pdf"}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringNotContainsString( 'href="javascript:alert(1)"', $output );
+		$this->assertStringNotContainsString( 'href="file:///private/guide.pdf"', $output );
+		$this->assertStringContainsString( 'javascript:alert(1)', $output );
+		$this->assertStringContainsString( 'file:///private/guide.pdf', $output );
+	}
+
+	/**
 	 * The query selects only the optional columns that exist.
 	 *
 	 * @return void

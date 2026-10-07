@@ -102,7 +102,7 @@ class Dashboard_Report {
 		if ( $total > 0 ) {
 			$hourly = $this->repository->hourly_series( $period );
 
-			$report['daily']        = Daily_Series::from_hourly( is_array( $hourly ) ? $hourly : array(), $period );
+			$report['daily']        = Daily_Series::from_hourly( is_array( $hourly ) ? $hourly : array(), $period, isset( $summary['tools'] ) );
 			$report['daily_failed'] = null === $hourly;
 		}
 

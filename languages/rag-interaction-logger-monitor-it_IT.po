@@ -264,6 +264,14 @@ msgstr "Incompleti"
 msgid "Blocks per day"
 msgstr "Blocchi al giorno"
 
+#: includes/admin/class-dashboard-page.php:548
+msgid "Turns with and without tools per day"
+msgstr "Turni giornalieri con e senza strumenti"
+
+#: includes/admin/class-dashboard-page.php:552
+msgid "Without tools"
+msgstr "Senza strumenti"
+
 #: includes/admin/class-dashboard-page.php:536
 #: includes/admin/class-dashboard-page.php:556
 #: includes/admin/class-indicator-texts.php:132
@@ -317,6 +325,7 @@ msgid "Delivered answer"
 msgstr "Risposta consegnata"
 
 #: includes/admin/class-detail-page.php:155
+#: includes/admin/class-detail-page.php:344
 msgid "ID"
 msgstr "ID"
 
@@ -450,9 +459,14 @@ msgstr "Input dello strumento"
 msgid "Tool output"
 msgstr "Output dello strumento"
 
-#: includes/admin/class-detail-page.php:274
+#: includes/admin/class-detail-page.php:308
+#: includes/admin/class-detail-page.php:314
 msgid "Recall sources"
 msgstr "Fonti del recupero"
+
+#: includes/admin/class-detail-page.php:364
+msgid "Score"
+msgstr "Punteggio"
 
 #: includes/admin/class-detail-page.php:309
 #: includes/admin/class-indicator-texts.php:126

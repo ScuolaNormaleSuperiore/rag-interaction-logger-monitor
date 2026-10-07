@@ -33,11 +33,12 @@ class Daily_Series {
 	/**
 	 * Builds the daily series of a period.
 	 *
-	 * @param array<int, array{hour: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int}> $hourly Rows from `hourly_series()`; `hour` is `Y-m-d H` in UTC.
-	 * @param Period                                                                                              $period Period the rows belong to.
-	 * @return array<int, array{date: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int}> One entry per local day, oldest first.
+	 * @param array<int, array{hour: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int, tools?: int}> $hourly     Rows from `hourly_series()`; `hour` is `Y-m-d H` in UTC.
+	 * @param Period                                                                                                           $period     Period the rows belong to.
+	 * @param bool                                                                                                             $with_tools Whether the source table has the tools column.
+	 * @return array<int, array{date: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int, tools?: int}> One entry per local day, oldest first.
 	 */
-	public static function from_hourly( array $hourly, Period $period ): array {
+	public static function from_hourly( array $hourly, Period $period, bool $with_tools = false ): array {
 		$zone = $period->start()->getTimezone();
 		$days = array();
 
@@ -47,7 +48,7 @@ class Daily_Series {
 		// A day-long step on wall time: it follows the local calendar across clock changes.
 		if ( $first->modify( '+' . self::MAX_FILLED_DAYS . ' days' ) >= $last ) {
 			for ( $day = $first; $day <= $last; $day = $day->modify( '+1 day' ) ) {
-				$days[ $day->format( 'Y-m-d' ) ] = self::empty_day( $day->format( 'Y-m-d' ) );
+				$days[ $day->format( 'Y-m-d' ) ] = self::empty_day( $day->format( 'Y-m-d' ), $with_tools );
 			}
 		}
 
@@ -61,11 +62,15 @@ class Daily_Series {
 			$key = $hour->setTimezone( $zone )->format( 'Y-m-d' );
 
 			if ( ! isset( $days[ $key ] ) ) {
-				$days[ $key ] = self::empty_day( $key );
+				$days[ $key ] = self::empty_day( $key, $with_tools );
 			}
 
 			foreach ( array( 'turns', 'incomplete', 'input_blocks', 'output_blocks' ) as $field ) {
 				$days[ $key ][ $field ] += (int) ( $row[ $field ] ?? 0 );
+			}
+
+			if ( $with_tools ) {
+				$days[ $key ]['tools'] += (int) ( $row['tools'] ?? 0 );
 			}
 		}
 
@@ -95,15 +100,22 @@ class Daily_Series {
 	 * Returns a day with all its counts at zero.
 	 *
 	 * @param string $date Day, `Y-m-d`.
-	 * @return array{date: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int}
+	 * @param bool   $with_tools Whether the day includes the tools count.
+	 * @return array{date: string, turns: int, incomplete: int, input_blocks: int, output_blocks: int, tools?: int}
 	 */
-	private static function empty_day( string $date ): array {
-		return array(
+	private static function empty_day( string $date, bool $with_tools = false ): array {
+		$day = array(
 			'date'          => $date,
 			'turns'         => 0,
 			'incomplete'    => 0,
 			'input_blocks'  => 0,
 			'output_blocks' => 0,
 		);
+
+		if ( $with_tools ) {
+			$day['tools'] = 0;
+		}
+
+		return $day;
 	}
 }

@@ -508,6 +508,26 @@ class DashboardPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The optional tools column adds a daily comparison chart and table column.
+	 *
+	 * @return void
+	 */
+	public function test_tools_chart_compares_turns_with_the_total(): void {
+		$this->load_with_tools();
+		$this->reader->rows[4][0]['tools'] = '30';
+		$this->reader->rows[4][1]['tools'] = '20';
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertSame( 4, substr_count( $output, '<svg ' ) );
+		$this->assertStringContainsString( '<title id="rilm-chart-tools-title">Turns with and without tools per day</title>', $output );
+		$this->assertStringContainsString( '</span> Without tools</li>', $output );
+		$this->assertStringContainsString( '</span> Turns that used tools</li>', $output );
+		$this->assertStringContainsString( '<th scope="col">Turns that used tools</th>', $output );
+		$this->assertMatchesRegularExpression( '/<th scope="row">2026-10-02<\/th><td>200<\/td><td>20<\/td><td>8<\/td><td>4<\/td><td>50<\/td>/', $output );
+	}
+
+	/**
 	 * The daily figures are also in a table, so the charts are not the only way to read them.
 	 *
 	 * @return void

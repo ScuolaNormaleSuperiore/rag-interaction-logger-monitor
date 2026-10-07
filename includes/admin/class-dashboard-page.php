@@ -542,6 +542,28 @@ class Dashboard_Page {
 					),
 				)
 			);
+			if ( isset( $report['tools'] ) ) {
+				Bar_Chart::render(
+					'rilm-chart-tools',
+					__( 'Turns with and without tools per day', 'rag-interaction-logger-monitor' ),
+					$labels,
+					array(
+						array(
+							'name'   => __( 'Without tools', 'rag-interaction-logger-monitor' ),
+							'values' => array_map(
+								static function ( array $day ): int {
+									return max( 0, $day['turns'] - $day['tools'] );
+								},
+								$days
+							),
+						),
+						array(
+							'name'   => __( 'Turns that used tools', 'rag-interaction-logger-monitor' ),
+							'values' => array_column( $days, 'tools' ),
+						),
+					)
+				);
+			}
 			?>
 		</div>
 		<p class="description"><?php esc_html_e( 'A turn blocked on both input and output counts in both series of the third chart.', 'rag-interaction-logger-monitor' ); ?></p>
@@ -555,19 +577,34 @@ class Dashboard_Page {
 						<th scope="col"><?php esc_html_e( 'Incomplete', 'rag-interaction-logger-monitor' ); ?></th>
 						<th scope="col"><?php esc_html_e( 'Input blocked', 'rag-interaction-logger-monitor' ); ?></th>
 						<th scope="col"><?php esc_html_e( 'Output blocked', 'rag-interaction-logger-monitor' ); ?></th>
+						<?php if ( isset( $report['tools'] ) ) : ?>
+							<th scope="col"><?php esc_html_e( 'Turns that used tools', 'rag-interaction-logger-monitor' ); ?></th>
+						<?php endif; ?>
 					</tr>
 				</thead>
 				<tbody>
 					<?php
 					foreach ( $days as $day ) {
-						printf(
-							'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td></tr>',
-							esc_html( $day['date'] ),
-							esc_html( number_format_i18n( $day['turns'] ) ),
-							esc_html( number_format_i18n( $day['incomplete'] ) ),
-							esc_html( number_format_i18n( $day['input_blocks'] ) ),
-							esc_html( number_format_i18n( $day['output_blocks'] ) )
-						);
+						if ( isset( $report['tools'] ) ) {
+							printf(
+								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td><td>%6$s</td></tr>',
+								esc_html( $day['date'] ),
+								esc_html( number_format_i18n( $day['turns'] ) ),
+								esc_html( number_format_i18n( $day['incomplete'] ) ),
+								esc_html( number_format_i18n( $day['input_blocks'] ) ),
+								esc_html( number_format_i18n( $day['output_blocks'] ) ),
+								esc_html( number_format_i18n( $day['tools'] ) )
+							);
+						} else {
+							printf(
+								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td></tr>',
+								esc_html( $day['date'] ),
+								esc_html( number_format_i18n( $day['turns'] ) ),
+								esc_html( number_format_i18n( $day['incomplete'] ) ),
+								esc_html( number_format_i18n( $day['input_blocks'] ) ),
+								esc_html( number_format_i18n( $day['output_blocks'] ) )
+							);
+						}
 					}
 					?>
 				</tbody>

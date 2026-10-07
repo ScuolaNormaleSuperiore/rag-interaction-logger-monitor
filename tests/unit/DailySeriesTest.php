@@ -108,6 +108,23 @@ class DailySeriesTest extends TestCase {
 	}
 
 	/**
+	 * Tool turns are added with the other hourly figures only when that optional column exists.
+	 *
+	 * @return void
+	 */
+	public function test_tool_turns_are_summed_per_day(): void {
+		$period = Period::preset( Period::TODAY, self::rome( '2026-10-02 14:30:00' ) );
+		$rows   = array(
+			self::hour( '2026-10-02 06', 3 ) + array( 'tools' => 1 ),
+			self::hour( '2026-10-02 09', 2 ) + array( 'tools' => 2 ),
+		);
+
+		$days = Daily_Series::from_hourly( $rows, $period, true );
+
+		$this->assertSame( 3, $days[0]['tools'] );
+	}
+
+	/**
 	 * A UTC hour belongs to the local day it falls in: late evening UTC is already tomorrow in Rome.
 	 *
 	 * @return void

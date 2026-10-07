@@ -479,6 +479,19 @@ class ToolsTest extends TestCase {
 	}
 
 	/**
+	 * The daily query counts turns with at least one tool in each hour.
+	 *
+	 * @return void
+	 */
+	public function test_hourly_series_counts_turns_with_tools(): void {
+		$this->db->rows = array( array() );
+
+		$this->repository()->hourly_series( self::period() );
+
+		$this->assertStringContainsString( 'SUM( CASE WHEN ' . self::USED . ' THEN 1 ELSE 0 END ) AS tools', $this->db->queries[0] );
+	}
+
+	/**
 	 * The report holds the share of turns with tools and the counts per tool.
 	 *
 	 * @return void
