@@ -49,10 +49,13 @@ class Dashboard_Report {
 	/**
 	 * Builds the report of a period.
 	 *
-	 * @param Period $period Period to report on.
+	 * @param Period $period          Period to report on.
+	 * @param bool   $with_breakdowns Whether to query the median duration and the verdict and tool
+	 *                                breakdowns; the Daily trend page shows none of them.
+	 * @param bool   $with_daily      Whether to query the daily series; the Dashboard page does not show it.
 	 * @return array<string, mixed>|null Null when the main query failed.
 	 */
-	public function build( Period $period ): ?array {
+	public function build( Period $period, bool $with_breakdowns = true, bool $with_daily = true ): ?array {
 		$summary = $this->repository->summary( $period );
 
 		if ( null === $summary ) {
@@ -70,36 +73,36 @@ class Dashboard_Report {
 			),
 			'no_guardrails' => $this->share( $summary['no_guardrails'], $total ),
 			'input_blocks'  => $this->share( $summary['input_blocks'], $total ) + array(
-				'by_verdict' => $summary['input_blocks'] > 0 ? $this->repository->verdict_counts( 'input_verdict', $period ) : array(),
+				'by_verdict' => $with_breakdowns && $summary['input_blocks'] > 0 ? $this->repository->verdict_counts( 'input_verdict', $period ) : array(),
 			),
 			'output_blocks' => $this->share( $summary['output_blocks'], $total ) + array(
-				'by_verdict' => $summary['output_blocks'] > 0 ? $this->repository->verdict_counts( 'output_verdict', $period ) : array(),
+				'by_verdict' => $with_breakdowns && $summary['output_blocks'] > 0 ? $this->repository->verdict_counts( 'output_verdict', $period ) : array(),
 			),
 			// Zero recall is a share of the generated answers, the only turns that use recall.
 			'zero_recall'   => $this->share( $summary['zero_recall'], $summary['generated'] ) + array( 'generated' => $summary['generated'] ),
 			'duration'      => array(
 				'completed'  => $summary['completed'],
 				'average_ms' => $summary['average_ms'],
-				'median_ms'  => $this->repository->median_duration( $period, $summary['completed'] ),
+				'median_ms'  => $with_breakdowns ? $this->repository->median_duration( $period, $summary['completed'] ) : null,
 			),
 			'daily'         => array(),
 		);
 
 		// The tools figures exist only when the table has the column.
 		if ( isset( $summary['tools'] ) ) {
-			$by_name = $summary['tools'] > 0 ? $this->repository->tool_counts( $period ) : null;
+			$by_name = $with_breakdowns && $summary['tools'] > 0 ? $this->repository->tool_counts( $period ) : null;
 
 			$report['tools'] = $this->share( $summary['tools'], $total ) + array(
 				'by_name'        => null === $by_name ? array() : $by_name['counts'],
 				'by_name_cut'    => null !== $by_name && $by_name['truncated'],
-				'by_name_failed' => $summary['tools'] > 0 && null === $by_name,
+				'by_name_failed' => $with_breakdowns && $summary['tools'] > 0 && null === $by_name,
 			);
 		}
 
 		$report['daily_failed'] = false;
 
 		// No turns, no series: an empty period must not become a chart of zeros.
-		if ( $total > 0 ) {
+		if ( $with_daily && $total > 0 ) {
 			$hourly = $this->repository->hourly_series( $period );
 
 			$report['daily']        = Daily_Series::from_hourly( is_array( $hourly ) ? $hourly : array(), $period, isset( $summary['tools'] ) );

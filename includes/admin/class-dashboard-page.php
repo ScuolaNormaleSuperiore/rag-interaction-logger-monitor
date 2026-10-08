@@ -20,10 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Dashboard screen: the figures of a period and their daily trend.
+ * Dashboard screen: the figures of a period, the tools that ran and the blocks by verdict.
  *
  * It only reads data. The period is not sensitive, so it travels in the URL, and every
- * count links to the interactions list filtered the same way.
+ * count links to the interactions list filtered the same way. The daily charts are on
+ * the Daily trend page.
  */
 class Dashboard_Page {
 
@@ -109,7 +110,7 @@ class Dashboard_Page {
 				<p><?php esc_html_e( 'The interaction log is not available. See the notice above.', 'rag-interaction-logger-monitor' ); ?></p>
 				<?php
 			} else {
-				$report = ( new Dashboard_Report( $repository ) )->build( $filters->period() );
+				$report = ( new Dashboard_Report( $repository ) )->build( $filters->period(), true, false );
 
 				if ( null === $report ) {
 					?>
@@ -225,7 +226,6 @@ class Dashboard_Page {
 		$this->render_indicators( $report, $link );
 		$this->render_tools( $report, $link );
 		$this->render_verdicts( $report, $link );
-		$this->render_trend( $report );
 	}
 
 	/**
@@ -401,19 +401,21 @@ class Dashboard_Page {
 	 */
 	private function render_legend( bool $with_tools ): void {
 		?>
-		<h3 id="rilm-indicators-legend"><?php esc_html_e( 'What the indicators mean', 'rag-interaction-logger-monitor' ); ?></h3>
-		<dl class="rilm-legend-list" aria-labelledby="rilm-indicators-legend">
-			<?php
-			foreach ( Indicator_Texts::dashboard_keys( $with_tools ) as $key ) {
-				printf(
-					'<dt>%1$s</dt><dd>%2$s %3$s</dd>',
-					esc_html( Indicator_Texts::label( $key ) ),
-					esc_html( Indicator_Texts::description( $key ) ),
-					esc_html( Indicator_Texts::basis_sentence( $key ) )
-				);
-			}
-			?>
-		</dl>
+		<details class="rilm-details">
+			<summary id="rilm-indicators-legend"><?php esc_html_e( 'What the indicators mean', 'rag-interaction-logger-monitor' ); ?></summary>
+			<dl class="rilm-legend-list" aria-labelledby="rilm-indicators-legend">
+				<?php
+				foreach ( Indicator_Texts::dashboard_keys( $with_tools ) as $key ) {
+					printf(
+						'<dt>%1$s</dt><dd>%2$s %3$s</dd>',
+						esc_html( Indicator_Texts::label( $key ) ),
+						esc_html( Indicator_Texts::description( $key ) ),
+						esc_html( Indicator_Texts::basis_sentence( $key ) )
+					);
+				}
+				?>
+			</dl>
+		</details>
 		<?php
 	}
 
@@ -472,144 +474,6 @@ class Dashboard_Page {
 				?>
 			</tbody>
 		</table>
-		<?php
-	}
-
-	/**
-	 * Prints the daily charts and the table with the same numbers.
-	 *
-	 * @param array<string, mixed> $report Report of the period.
-	 * @return void
-	 */
-	private function render_trend( array $report ): void {
-		?>
-		<h2><?php esc_html_e( 'Daily trend', 'rag-interaction-logger-monitor' ); ?></h2>
-		<?php
-		if ( ! empty( $report['daily_failed'] ) ) {
-			?>
-			<p><?php esc_html_e( 'The daily figures could not be loaded.', 'rag-interaction-logger-monitor' ); ?></p>
-			<?php
-			return;
-		}
-
-		if ( array() === $report['daily'] ) {
-			?>
-			<p><?php esc_html_e( 'No turns in the period.', 'rag-interaction-logger-monitor' ); ?></p>
-			<?php
-			return;
-		}
-
-		$days = $report['daily'];
-
-		$labels = array_column( $days, 'date' );
-		?>
-		<div class="rilm-charts">
-			<?php
-			Bar_Chart::render(
-				'rilm-chart-turns',
-				__( 'Turns per day', 'rag-interaction-logger-monitor' ),
-				$labels,
-				array(
-					array(
-						'name'   => __( 'Turns', 'rag-interaction-logger-monitor' ),
-						'values' => array_column( $days, 'turns' ),
-					),
-				)
-			);
-			Bar_Chart::render(
-				'rilm-chart-incomplete',
-				__( 'Incomplete turns per day', 'rag-interaction-logger-monitor' ),
-				$labels,
-				array(
-					array(
-						'name'   => __( 'Incomplete', 'rag-interaction-logger-monitor' ),
-						'values' => array_column( $days, 'incomplete' ),
-					),
-				)
-			);
-			Bar_Chart::render(
-				'rilm-chart-blocks',
-				__( 'Blocks per day', 'rag-interaction-logger-monitor' ),
-				$labels,
-				array(
-					array(
-						'name'   => __( 'Input blocked', 'rag-interaction-logger-monitor' ),
-						'values' => array_column( $days, 'input_blocks' ),
-					),
-					array(
-						'name'   => __( 'Output blocked', 'rag-interaction-logger-monitor' ),
-						'values' => array_column( $days, 'output_blocks' ),
-					),
-				)
-			);
-			if ( isset( $report['tools'] ) ) {
-				Bar_Chart::render(
-					'rilm-chart-tools',
-					__( 'Turns with and without tools per day', 'rag-interaction-logger-monitor' ),
-					$labels,
-					array(
-						array(
-							'name'   => __( 'Without tools', 'rag-interaction-logger-monitor' ),
-							'values' => array_map(
-								static function ( array $day ): int {
-									return max( 0, $day['turns'] - $day['tools'] );
-								},
-								$days
-							),
-						),
-						array(
-							'name'   => __( 'Turns that used tools', 'rag-interaction-logger-monitor' ),
-							'values' => array_column( $days, 'tools' ),
-						),
-					)
-				);
-			}
-			?>
-		</div>
-		<p class="description"><?php esc_html_e( 'A turn blocked on both input and output counts in both series of the third chart.', 'rag-interaction-logger-monitor' ); ?></p>
-		<details class="rilm-details">
-			<summary><?php esc_html_e( 'Show the daily figures as a table', 'rag-interaction-logger-monitor' ); ?></summary>
-			<table class="widefat striped rilm-daily-table">
-				<thead>
-					<tr>
-						<th scope="col"><?php esc_html_e( 'Day', 'rag-interaction-logger-monitor' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Turns', 'rag-interaction-logger-monitor' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Incomplete', 'rag-interaction-logger-monitor' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Input blocked', 'rag-interaction-logger-monitor' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Output blocked', 'rag-interaction-logger-monitor' ); ?></th>
-						<?php if ( isset( $report['tools'] ) ) : ?>
-							<th scope="col"><?php esc_html_e( 'Turns that used tools', 'rag-interaction-logger-monitor' ); ?></th>
-						<?php endif; ?>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-					foreach ( $days as $day ) {
-						if ( isset( $report['tools'] ) ) {
-							printf(
-								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td><td>%6$s</td></tr>',
-								esc_html( $day['date'] ),
-								esc_html( number_format_i18n( $day['turns'] ) ),
-								esc_html( number_format_i18n( $day['incomplete'] ) ),
-								esc_html( number_format_i18n( $day['input_blocks'] ) ),
-								esc_html( number_format_i18n( $day['output_blocks'] ) ),
-								esc_html( number_format_i18n( $day['tools'] ) )
-							);
-						} else {
-							printf(
-								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td></tr>',
-								esc_html( $day['date'] ),
-								esc_html( number_format_i18n( $day['turns'] ) ),
-								esc_html( number_format_i18n( $day['incomplete'] ) ),
-								esc_html( number_format_i18n( $day['input_blocks'] ) ),
-								esc_html( number_format_i18n( $day['output_blocks'] ) )
-							);
-						}
-					}
-					?>
-				</tbody>
-			</table>
-		</details>
 		<?php
 	}
 }

@@ -29,6 +29,11 @@ class Menu {
 	public const SLUG_DASHBOARD = 'rilm-dashboard';
 
 	/**
+	 * Menu slug of the daily trend charts.
+	 */
+	public const SLUG_TREND = 'rilm-trend';
+
+	/**
 	 * Menu slug of the interactions list.
 	 */
 	public const SLUG_INTERACTIONS = 'rilm-interactions';
@@ -120,6 +125,12 @@ class Menu {
 			__( 'Dashboard', 'rag-interaction-logger-monitor' ),
 			self::CAPABILITY,
 			self::SLUG_DASHBOARD
+		);
+
+		$this->add_submenu(
+			__( 'Daily trend', 'rag-interaction-logger-monitor' ),
+			self::SLUG_TREND,
+			array( new Trend_Page( $this->connection ), 'render' )
 		);
 
 		$interactions      = new Interactions_Page( $this->connection );

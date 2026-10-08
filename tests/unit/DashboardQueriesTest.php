@@ -589,6 +589,33 @@ class DashboardQueriesTest extends TestCase {
 	}
 
 	/**
+	 * Without the breakdowns, the median and the verdict counts are not queried, and the median is null.
+	 *
+	 * The Daily trend page shows none of them: asking for them there would be wasted queries.
+	 *
+	 * @return void
+	 */
+	public function test_breakdowns_are_not_queried_when_not_requested(): void {
+		$this->db->rows = array(
+			array( self::summary_row() ),
+			array(
+				array(
+					'hour'  => '2026-10-02 10',
+					'turns' => '5',
+				),
+			),
+		);
+
+		$report = ( new Dashboard_Report( $this->repository ) )->build( self::period(), false );
+
+		$this->assertNull( $report['duration']['median_ms'] );
+		$this->assertSame( array(), $report['input_blocks']['by_verdict'] );
+		$this->assertSame( array(), $report['output_blocks']['by_verdict'] );
+		$this->assertCount( 2, $this->db->queries, 'Only the summary and the daily series are queried.' );
+		$this->assertStringContainsString( 'LEFT( ts, 13 )', $this->db->queries[1] );
+	}
+
+	/**
 	 * A failed summary makes the whole report null.
 	 *
 	 * @return void
