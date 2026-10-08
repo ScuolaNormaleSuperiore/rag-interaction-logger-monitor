@@ -369,6 +369,68 @@ class TrendPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A year is bucketed by month: the charts' accessible description says "months", not "days".
+	 *
+	 * @return void
+	 */
+	public function test_description_says_months_for_a_year_period(): void {
+		$_GET = array( 'period' => 'year' );
+
+		$this->reader->rows = array(
+			array(
+				array(
+					'total'         => '5',
+					'generated'     => '5',
+					'fast_reply'    => '0',
+					'incomplete'    => '0',
+					'no_guardrails' => '0',
+					'input_blocks'  => '0',
+					'output_blocks' => '0',
+					'zero_recall'   => '0',
+					'completed'     => '0',
+					'average_ms'    => null,
+				),
+			),
+			array(),
+		);
+
+		$output = $this->render( $this->page() );
+
+		// Last year from 2 October 2026 runs from October 2025 to October 2026: 13 calendar months.
+		$this->assertStringContainsString( 'Bar chart of 13 months. The highest value is', $output );
+		$this->assertStringNotContainsString( 'days', $output );
+	}
+
+	/**
+	 * An unrecognized granularity throws instead of silently defaulting to the daily wording.
+	 *
+	 * `texts_for()` and `unit_phrase()` have no `default` arm: `Period_Series` is the only
+	 * place that knows which granularities exist, so a tier it stops producing (or a new one
+	 * it starts producing without this file being updated) must fail loudly here, not mislabel
+	 * the charts as daily.
+	 *
+	 * @return void
+	 */
+	public function test_unknown_granularity_is_rejected_not_defaulted(): void {
+		$texts_for   = new \ReflectionMethod( Trend_Page::class, 'texts_for' );
+		$unit_phrase = new \ReflectionMethod( Trend_Page::class, 'unit_phrase' );
+
+		try {
+			$texts_for->invoke( null, 'quarter' );
+			$this->fail( 'texts_for() must reject an unrecognized granularity.' );
+		} catch ( \UnhandledMatchError $exception ) {
+			$this->assertStringContainsString( 'quarter', $exception->getMessage() );
+		}
+
+		try {
+			$unit_phrase->invoke( null, 'quarter', 5 );
+			$this->fail( 'unit_phrase() must reject an unrecognized granularity.' );
+		} catch ( \UnhandledMatchError $exception ) {
+			$this->assertStringContainsString( 'quarter', $exception->getMessage() );
+		}
+	}
+
+	/**
 	 * The page only reads: every query is a SELECT and no mail is sent.
 	 *
 	 * @return void
@@ -409,11 +471,12 @@ class TrendPageTest extends WP_UnitTestCase {
 	 *
 	 * @param string[] $labels Labels.
 	 * @param array    $series Series.
+	 * @param string   $unit   Worded, pluralized count of bars; defaults to a value distinct from any real wording.
 	 * @return string
 	 */
-	private function chart( array $labels, array $series ): string {
+	private function chart( array $labels, array $series, string $unit = 'Test unit' ): string {
 		ob_start();
-		Bar_Chart::render( 'test-chart', 'Test <chart>', $labels, $series );
+		Bar_Chart::render( 'test-chart', 'Test <chart>', $unit, $labels, $series );
 		return ob_get_clean();
 	}
 
@@ -439,6 +502,28 @@ class TrendPageTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'The highest value is 10.', $output );
 		$this->assertStringContainsString( '2026-10-01</text>', $output );
 		$this->assertStringContainsString( '2026-10-03</text>', $output );
+	}
+
+	/**
+	 * The accessible description uses the caller's own wording for the bars: the chart itself has no
+	 * idea whether they are days, weeks or months.
+	 *
+	 * @return void
+	 */
+	public function test_chart_description_uses_the_callers_unit_wording(): void {
+		$output = $this->chart(
+			array( 'a', 'b' ),
+			array(
+				array(
+					'name'   => 'Turns',
+					'values' => array( 1, 2 ),
+				),
+			),
+			'12 months'
+		);
+
+		$this->assertStringContainsString( 'Bar chart of 12 months. The highest value is 2.', $output );
+		$this->assertStringNotContainsString( 'day', $output );
 	}
 
 	/**

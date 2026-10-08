@@ -437,7 +437,7 @@ class Interaction_Repository {
 	 *
 	 * The hour is cut from the stored UTC timestamp with `LEFT()`, not formatted with
 	 * `DATE_FORMAT()`: its `%d` would be read as a placeholder by `prepare()`. Grouping
-	 * the hours into days of the site time zone is done in PHP (see `Daily_Series`),
+	 * the hours into buckets of the site time zone is done in PHP (see `Period_Series`),
 	 * which keeps daylight saving changes correct without time zone tables in the database.
 	 *
 	 * @param Period $period Period to look into.

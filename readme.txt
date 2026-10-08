@@ -4,7 +4,7 @@ Tags: rag, logs, monitoring, chatbot, admin
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,7 +16,8 @@ RAG Interaction Logger Monitor is an administrator-only backoffice for the data 
 
 **Pages**
 
-* **Dashboard** – turns, average and median duration, indicators (generated, fast reply, incomplete, blocked input and output, turns Guardrails did not handle, answers generated without recalled sources, turns that used tools), blocks by verdict, the use of each tool or form, and daily charts. A legend explains every indicator.
+* **Dashboard** – turns, average and median duration, indicators (generated, fast reply, incomplete, blocked input and output, turns Guardrails did not handle, answers generated without recalled sources, turns that used tools), the use of each tool or form, and blocks by verdict. A collapsible legend explains every indicator.
+* **Daily trend** – the same figures charted over time, one bar per day, week or month depending on how long the chosen period is, so the chart stays readable whatever the period.
 * **Interactions** – a paginated list with filters (period, text search, Guardrails, verdicts, outcome, instance, user, tools and more) and sorting.
 * **Interaction detail** – every field of one interaction, with a comparison of the generated and delivered answers.
 * **Anomalies** – predefined views (incomplete turns, turns without Guardrails, blocks, answers changed without a verdict, empty recall, tools that ran in a risky turn), each with a count and a link to the filtered list.
@@ -89,10 +90,10 @@ The plugin shows, to administrators only, what the logger recorded: questions, a
 
 == Changelog ==
 
-= 0.1.0 =
-* First version: Dashboard with indicator legend, Interactions list with filters and search, Interaction detail, Anomalies, tools and forms filters and figures, Settings with encrypted password, Italian translation.
+= 1.0.0 =
+* First version: Dashboard with indicator legend, Daily trend, Interactions list with filters and search, Interaction detail, Anomalies, tools and forms filters and figures, Settings with encrypted password, Italian translation.
 
 == Upgrade Notice ==
 
-= 0.1.0 =
+= 1.0.0 =
 First version.

@@ -14,6 +14,7 @@ use RILM\Config\Config;
 use RILM\Repository\Dashboard_Report;
 use RILM\Repository\Interaction_Repository;
 use RILM\Repository\Period;
+use RILM\Repository\Period_Series;
 use RILM\Tests\Unit\Support\Fake_Reader;
 
 /**
@@ -515,12 +516,48 @@ class DashboardQueriesTest extends TestCase {
 		$this->assertSame( 1234.5, $report['duration']['average_ms'] );
 		$this->assertSame( 1000.0, $report['duration']['median_ms'] );
 
+		$this->assertSame( Period_Series::GRANULARITY_DAY, $report['daily_granularity'] );
 		$this->assertFalse( $report['daily_failed'] );
 		$this->assertSame( array( '2026-10-02' ), array_column( $report['daily'], 'date' ) );
 		$this->assertSame( array( 200 ), array_column( $report['daily'], 'turns' ) );
 		$this->assertSame( array( 20 ), array_column( $report['daily'], 'incomplete' ) );
 		$this->assertSame( array( 8 ), array_column( $report['daily'], 'input_blocks' ) );
 		$this->assertSame( array( 4 ), array_column( $report['daily'], 'output_blocks' ) );
+	}
+
+	/**
+	 * The report names the bucket size the Daily trend page should use, based on the period alone.
+	 *
+	 * @return void
+	 */
+	public function test_report_names_the_daily_granularity(): void {
+		$this->db->col  = array( '900' );
+		$this->db->rows = array(
+			array( self::summary_row() ),
+			array(),
+		);
+
+		$year   = Period::preset( Period::YEAR, new DateTimeImmutable( '2026-10-02 14:30:00', new DateTimeZone( 'Europe/Rome' ) ) );
+		$report = ( new Dashboard_Report( $this->repository ) )->build( $year );
+
+		$this->assertSame( Period_Series::GRANULARITY_MONTH, $report['daily_granularity'] );
+	}
+
+	/**
+	 * The Dashboard page never reads the granularity or the daily series: `with_daily = false`
+	 * must not compute either, not even to leave a key nobody on that page consumes.
+	 *
+	 * @return void
+	 */
+	public function test_daily_granularity_is_not_computed_when_daily_is_not_requested(): void {
+		$this->db->rows = array( array( self::summary_row() ) );
+
+		$report = ( new Dashboard_Report( $this->repository ) )->build( self::period(), false, false );
+
+		$this->assertArrayNotHasKey( 'daily_granularity', $report );
+		$this->assertSame( array(), $report['daily'] );
+		$this->assertFalse( $report['daily_failed'] );
+		$this->assertCount( 1, $this->db->queries, 'with_daily = false must not query the hourly series.' );
 	}
 
 	/**

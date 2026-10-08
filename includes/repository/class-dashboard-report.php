@@ -101,12 +101,18 @@ class Dashboard_Report {
 
 		$report['daily_failed'] = false;
 
-		// No turns, no series: an empty period must not become a chart of zeros.
-		if ( $with_daily && $total > 0 ) {
-			$hourly = $this->repository->hourly_series( $period );
+		// The Dashboard page never reads the granularity or the series: do not compute either for it.
+		if ( $with_daily ) {
+			$granularity                 = Period_Series::granularity_for( $period );
+			$report['daily_granularity'] = $granularity;
 
-			$report['daily']        = Daily_Series::from_hourly( is_array( $hourly ) ? $hourly : array(), $period, isset( $summary['tools'] ) );
-			$report['daily_failed'] = null === $hourly;
+			// No turns, no series: an empty period must not become a chart of zeros.
+			if ( $total > 0 ) {
+				$hourly = $this->repository->hourly_series( $period );
+
+				$report['daily']        = Period_Series::from_hourly( is_array( $hourly ) ? $hourly : array(), $period, isset( $summary['tools'] ), $granularity );
+				$report['daily_failed'] = null === $hourly;
+			}
 		}
 
 		return $report;

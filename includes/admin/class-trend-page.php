@@ -14,14 +14,17 @@ use RILM\Database\Optional_Columns;
 use RILM\Repository\Dashboard_Report;
 use RILM\Repository\Filters;
 use RILM\Repository\Interaction_Repository;
+use RILM\Repository\Period_Series;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Daily trend screen: the daily charts of a period and the table with the same numbers.
+ * Daily trend screen: the charts of a period and the table with the same numbers.
  *
+ * The bucket size (day, week or month) grows with the length of the period, chosen
+ * by `Period_Series::granularity_for()`, so a chart never has to draw too many bars.
  * It only reads data. The period is not sensitive, so it travels in the URL.
  */
 class Trend_Page {
@@ -196,15 +199,18 @@ class Trend_Page {
 			return;
 		}
 
-		$days = $report['daily'];
-
-		$labels = array_column( $days, 'date' );
+		$days        = $report['daily'];
+		$granularity = $report['daily_granularity'] ?? Period_Series::GRANULARITY_DAY;
+		$texts       = self::texts_for( $granularity );
+		$labels      = array_column( $days, 'date' );
+		$unit        = self::unit_phrase( $granularity, count( $labels ) );
 		?>
 		<div class="rilm-charts">
 			<?php
 			Bar_Chart::render(
 				'rilm-chart-turns',
-				__( 'Turns per day', 'rag-interaction-logger-monitor' ),
+				$texts['turns'],
+				$unit,
 				$labels,
 				array(
 					array(
@@ -215,7 +221,8 @@ class Trend_Page {
 			);
 			Bar_Chart::render(
 				'rilm-chart-incomplete',
-				__( 'Incomplete turns per day', 'rag-interaction-logger-monitor' ),
+				$texts['incomplete'],
+				$unit,
 				$labels,
 				array(
 					array(
@@ -226,7 +233,8 @@ class Trend_Page {
 			);
 			Bar_Chart::render(
 				'rilm-chart-blocks',
-				__( 'Blocks per day', 'rag-interaction-logger-monitor' ),
+				$texts['blocks'],
+				$unit,
 				$labels,
 				array(
 					array(
@@ -242,7 +250,8 @@ class Trend_Page {
 			if ( isset( $report['tools'] ) ) {
 				Bar_Chart::render(
 					'rilm-chart-tools',
-					__( 'Turns with and without tools per day', 'rag-interaction-logger-monitor' ),
+					$texts['tools'],
+					$unit,
 					$labels,
 					array(
 						array(
@@ -265,11 +274,11 @@ class Trend_Page {
 		</div>
 		<p class="description"><?php esc_html_e( 'A turn blocked on both input and output counts in both series of the third chart.', 'rag-interaction-logger-monitor' ); ?></p>
 		<details class="rilm-details">
-			<summary><?php esc_html_e( 'Show the daily figures as a table', 'rag-interaction-logger-monitor' ); ?></summary>
+			<summary><?php echo esc_html( $texts['show_table'] ); ?></summary>
 			<table class="widefat striped rilm-daily-table">
 				<thead>
 					<tr>
-						<th scope="col"><?php esc_html_e( 'Day', 'rag-interaction-logger-monitor' ); ?></th>
+						<th scope="col"><?php echo esc_html( $texts['column'] ); ?></th>
 						<th scope="col"><?php esc_html_e( 'Turns', 'rag-interaction-logger-monitor' ); ?></th>
 						<th scope="col"><?php esc_html_e( 'Incomplete', 'rag-interaction-logger-monitor' ); ?></th>
 						<th scope="col"><?php esc_html_e( 'Input blocked', 'rag-interaction-logger-monitor' ); ?></th>
@@ -308,5 +317,75 @@ class Trend_Page {
 			</table>
 		</details>
 		<?php
+	}
+
+	/**
+	 * Returns the chart titles, the table column name and the table summary for a bucket size.
+	 *
+	 * No `default` arm: `Period_Series` is the single place that knows which granularities
+	 * exist, so a value it stops producing (or a new one it starts producing) must be added
+	 * here too, or this throws instead of silently mislabeling the bucket size.
+	 *
+	 * @param string $granularity One of the `Period_Series::GRANULARITY_*` constants.
+	 * @return array<string, string>
+	 */
+	private static function texts_for( string $granularity ): array {
+		return match ( $granularity ) {
+			Period_Series::GRANULARITY_WEEK => array(
+				'turns'      => __( 'Turns per week', 'rag-interaction-logger-monitor' ),
+				'incomplete' => __( 'Incomplete turns per week', 'rag-interaction-logger-monitor' ),
+				'blocks'     => __( 'Blocks per week', 'rag-interaction-logger-monitor' ),
+				'tools'      => __( 'Turns with and without tools per week', 'rag-interaction-logger-monitor' ),
+				'column'     => __( 'Week', 'rag-interaction-logger-monitor' ),
+				'show_table' => __( 'Show the weekly figures as a table', 'rag-interaction-logger-monitor' ),
+			),
+			Period_Series::GRANULARITY_MONTH => array(
+				'turns'      => __( 'Turns per month', 'rag-interaction-logger-monitor' ),
+				'incomplete' => __( 'Incomplete turns per month', 'rag-interaction-logger-monitor' ),
+				'blocks'     => __( 'Blocks per month', 'rag-interaction-logger-monitor' ),
+				'tools'      => __( 'Turns with and without tools per month', 'rag-interaction-logger-monitor' ),
+				'column'     => __( 'Month', 'rag-interaction-logger-monitor' ),
+				'show_table' => __( 'Show the monthly figures as a table', 'rag-interaction-logger-monitor' ),
+			),
+			Period_Series::GRANULARITY_DAY => array(
+				'turns'      => __( 'Turns per day', 'rag-interaction-logger-monitor' ),
+				'incomplete' => __( 'Incomplete turns per day', 'rag-interaction-logger-monitor' ),
+				'blocks'     => __( 'Blocks per day', 'rag-interaction-logger-monitor' ),
+				'tools'      => __( 'Turns with and without tools per day', 'rag-interaction-logger-monitor' ),
+				'column'     => __( 'Day', 'rag-interaction-logger-monitor' ),
+				'show_table' => __( 'Show the daily figures as a table', 'rag-interaction-logger-monitor' ),
+			),
+		};
+	}
+
+	/**
+	 * Returns the worded, pluralized count of bars for a bucket size, for the charts' accessible description.
+	 *
+	 * Bar_Chart itself does not know whether its bars are days, weeks or months, so the words
+	 * and the plural form (which depend on the count) are resolved here, once per render. No
+	 * `default` arm, for the same reason as `texts_for()`.
+	 *
+	 * @param string $granularity One of the `Period_Series::GRANULARITY_*` constants.
+	 * @param int    $count       Number of bars.
+	 * @return string
+	 */
+	private static function unit_phrase( string $granularity, int $count ): string {
+		return match ( $granularity ) {
+			Period_Series::GRANULARITY_WEEK => sprintf(
+				/* translators: %s: number of weeks. */
+				_n( '%s week', '%s weeks', $count, 'rag-interaction-logger-monitor' ),
+				number_format_i18n( $count )
+			),
+			Period_Series::GRANULARITY_MONTH => sprintf(
+				/* translators: %s: number of months. */
+				_n( '%s month', '%s months', $count, 'rag-interaction-logger-monitor' ),
+				number_format_i18n( $count )
+			),
+			Period_Series::GRANULARITY_DAY => sprintf(
+				/* translators: %s: number of days. */
+				_n( '%s day', '%s days', $count, 'rag-interaction-logger-monitor' ),
+				number_format_i18n( $count )
+			),
+		};
 	}
 }

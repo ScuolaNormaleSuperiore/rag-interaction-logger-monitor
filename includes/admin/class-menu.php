@@ -128,9 +128,10 @@ class Menu {
 		);
 
 		$this->add_submenu(
-			__( 'Daily trend', 'rag-interaction-logger-monitor' ),
+			__( 'Trends', 'rag-interaction-logger-monitor' ),
 			self::SLUG_TREND,
-			array( new Trend_Page( $this->connection ), 'render' )
+			array( new Trend_Page( $this->connection ), 'render' ),
+			__( 'Daily trend', 'rag-interaction-logger-monitor' )
 		);
 
 		$interactions      = new Interactions_Page( $this->connection );
@@ -196,16 +197,18 @@ class Menu {
 	/**
 	 * Adds a visible sub page under the top-level menu.
 	 *
-	 * @param string   $title    Page and menu title.
-	 * @param string   $slug     Menu slug.
-	 * @param callable $callback Page renderer.
+	 * @param string      $menu_title Label shown in the menu; also the page title, unless given below.
+	 * @param string      $slug       Menu slug.
+	 * @param callable    $callback   Page renderer.
+	 * @param string|null $page_title Page title (the browser tab), when it should read differently
+	 *                                from the shorter menu label; defaults to `$menu_title`.
 	 * @return string|null Hook suffix of the page, or null when it was not registered.
 	 */
-	private function add_submenu( string $title, string $slug, callable $callback ): ?string {
+	private function add_submenu( string $menu_title, string $slug, callable $callback, ?string $page_title = null ): ?string {
 		$hook_suffix = add_submenu_page(
 			self::SLUG_DASHBOARD,
-			$title,
-			$title,
+			$page_title ?? $menu_title,
+			$menu_title,
 			self::CAPABILITY,
 			$slug,
 			$callback

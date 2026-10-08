@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-3.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: RAG Interaction Logger Monitor 0.1.0\n"
+"Project-Id-Version: RAG Interaction Logger Monitor 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/rag-interaction-logger-monitor\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-08T14:55:27+02:00\n"
+"POT-Creation-Date: 2026-10-08T16:18:29+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: rag-interaction-logger-monitor\n"
@@ -41,7 +41,7 @@ msgid "Sorry, you are not allowed to access this page."
 msgstr ""
 
 #: includes/admin/class-anomalies-page.php:84
-#: includes/admin/class-menu.php:149
+#: includes/admin/class-menu.php:150
 msgid "Anomalies"
 msgstr ""
 
@@ -55,13 +55,13 @@ msgstr ""
 #: includes/admin/class-dashboard-page.php:110
 #: includes/admin/class-detail-page.php:79
 #: includes/admin/class-interactions-page.php:162
-#: includes/admin/class-trend-page.php:108
+#: includes/admin/class-trend-page.php:111
 msgid "The interaction log is not available. See the notice above."
 msgstr ""
 
 #: includes/admin/class-anomalies-page.php:186
 #: includes/admin/class-dashboard-page.php:204
-#: includes/admin/class-trend-page.php:170
+#: includes/admin/class-trend-page.php:173
 msgid "Apply period"
 msgstr ""
 
@@ -85,7 +85,7 @@ msgstr ""
 #: includes/admin/class-dashboard-page.php:303
 #: includes/admin/class-dashboard-page.php:375
 #: includes/admin/class-interactions-page.php:145
-#: includes/admin/class-menu.php:138
+#: includes/admin/class-menu.php:139
 msgid "Interactions"
 msgstr ""
 
@@ -103,13 +103,11 @@ msgstr ""
 msgid "(%s)"
 msgstr ""
 
-#. translators: 1: number of days, 2: highest value of a day.
-#: includes/admin/class-bar-chart.php:81
+#. translators: 1: number of bars, already worded, e.g. "7 days" or "12 months", 2: highest value of a bar.
+#: includes/admin/class-bar-chart.php:82
 #, php-format
-msgid "Bar chart of %1$s day. The highest value is %2$s. The same numbers are in the table below."
-msgid_plural "Bar chart of %1$s days. The highest value is %2$s. The same numbers are in the table below."
-msgstr[0] ""
-msgstr[1] ""
+msgid "Bar chart of %1$s. The highest value is %2$s. The same numbers are in the table below."
+msgstr ""
 
 #: includes/admin/class-dashboard-page.php:84
 #: includes/admin/class-menu.php:124
@@ -119,13 +117,13 @@ msgstr ""
 
 #. translators: %s: time zone name, e.g. "Europe/Rome".
 #: includes/admin/class-dashboard-page.php:90
-#: includes/admin/class-trend-page.php:88
+#: includes/admin/class-trend-page.php:91
 #, php-format
 msgid "Figures are for the chosen period, read in the site time zone: %s."
 msgstr ""
 
 #: includes/admin/class-dashboard-page.php:117
-#: includes/admin/class-trend-page.php:115
+#: includes/admin/class-trend-page.php:118
 msgid "The figures could not be loaded."
 msgstr ""
 
@@ -142,8 +140,8 @@ msgid "%s ms"
 msgstr ""
 
 #: includes/admin/class-dashboard-page.php:242
-#: includes/admin/class-trend-page.php:211
-#: includes/admin/class-trend-page.php:273
+#: includes/admin/class-trend-page.php:217
+#: includes/admin/class-trend-page.php:282
 msgid "Turns"
 msgstr ""
 
@@ -425,8 +423,8 @@ msgstr ""
 #: includes/admin/class-indicator-texts.php:130
 #: includes/admin/class-interactions-list-table.php:282
 #: includes/admin/class-interactions-page.php:400
-#: includes/admin/class-trend-page.php:222
-#: includes/admin/class-trend-page.php:274
+#: includes/admin/class-trend-page.php:229
+#: includes/admin/class-trend-page.php:283
 msgid "Incomplete"
 msgstr ""
 
@@ -445,14 +443,14 @@ msgid "Did not reply"
 msgstr ""
 
 #: includes/admin/class-indicator-texts.php:132
-#: includes/admin/class-trend-page.php:233
-#: includes/admin/class-trend-page.php:275
+#: includes/admin/class-trend-page.php:241
+#: includes/admin/class-trend-page.php:284
 msgid "Input blocked"
 msgstr ""
 
 #: includes/admin/class-indicator-texts.php:134
-#: includes/admin/class-trend-page.php:237
-#: includes/admin/class-trend-page.php:276
+#: includes/admin/class-trend-page.php:245
+#: includes/admin/class-trend-page.php:285
 msgid "Output blocked"
 msgstr ""
 
@@ -469,8 +467,8 @@ msgid "Answer changed without an output verdict"
 msgstr ""
 
 #: includes/admin/class-indicator-texts.php:142
-#: includes/admin/class-trend-page.php:258
-#: includes/admin/class-trend-page.php:278
+#: includes/admin/class-trend-page.php:267
+#: includes/admin/class-trend-page.php:287
 msgid "Turns that used tools"
 msgstr ""
 
@@ -728,18 +726,22 @@ msgid "Monitor RAG"
 msgstr ""
 
 #: includes/admin/class-menu.php:131
-#: includes/admin/class-trend-page.php:82
+msgid "Trends"
+msgstr ""
+
+#: includes/admin/class-menu.php:134
+#: includes/admin/class-trend-page.php:85
 msgid "Daily trend"
 msgstr ""
 
-#: includes/admin/class-menu.php:155
+#: includes/admin/class-menu.php:156
 #: includes/admin/class-settings-page.php:104
 #: includes/class-plugin.php:62
 msgid "Settings"
 msgstr ""
 
-#: includes/admin/class-menu.php:163
 #: includes/admin/class-menu.php:164
+#: includes/admin/class-menu.php:165
 msgid "Interaction detail"
 msgstr ""
 
@@ -933,42 +935,114 @@ msgstr ""
 msgid "Database account with SELECT-only access to the log table. Required."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:187
+#: includes/admin/class-trend-page.php:190
 msgid "The daily figures could not be loaded."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:194
+#: includes/admin/class-trend-page.php:197
 msgid "No turns in the period."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:207
-msgid "Turns per day"
-msgstr ""
-
-#: includes/admin/class-trend-page.php:218
-msgid "Incomplete turns per day"
-msgstr ""
-
-#: includes/admin/class-trend-page.php:229
-msgid "Blocks per day"
-msgstr ""
-
-#: includes/admin/class-trend-page.php:245
-msgid "Turns with and without tools per day"
-msgstr ""
-
-#: includes/admin/class-trend-page.php:249
+#: includes/admin/class-trend-page.php:258
 msgid "Without tools"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:266
+#: includes/admin/class-trend-page.php:275
 msgid "A turn blocked on both input and output counts in both series of the third chart."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:268
+#: includes/admin/class-trend-page.php:335
+msgid "Turns per week"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:336
+msgid "Incomplete turns per week"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:337
+msgid "Blocks per week"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:338
+msgid "Turns with and without tools per week"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:339
+msgid "Week"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:340
+msgid "Show the weekly figures as a table"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:343
+msgid "Turns per month"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:344
+msgid "Incomplete turns per month"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:345
+msgid "Blocks per month"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:346
+msgid "Turns with and without tools per month"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:347
+msgid "Month"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:348
+msgid "Show the monthly figures as a table"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:351
+msgid "Turns per day"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:352
+msgid "Incomplete turns per day"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:353
+msgid "Blocks per day"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:354
+msgid "Turns with and without tools per day"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:355
+msgid "Day"
+msgstr ""
+
+#: includes/admin/class-trend-page.php:356
 msgid "Show the daily figures as a table"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:272
-msgid "Day"
-msgstr ""
+#. translators: %s: number of weeks.
+#: includes/admin/class-trend-page.php:376
+#, php-format
+msgid "%s week"
+msgid_plural "%s weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of months.
+#: includes/admin/class-trend-page.php:381
+#, php-format
+msgid "%s month"
+msgid_plural "%s months"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of days.
+#: includes/admin/class-trend-page.php:386
+#, php-format
+msgid "%s day"
+msgid_plural "%s days"
+msgstr[0] ""
+msgstr[1] ""

@@ -46,11 +46,12 @@ class Bar_Chart {
 	 *
 	 * @param string                                                  $id     Unique id of the chart in the page.
 	 * @param string                                                  $title  Title of the chart.
+	 * @param string                                                  $unit   Number of bars, already worded and pluralized by the caller (for example "7 days" or "12 months"): the bars are not always days.
 	 * @param string[]                                                $labels One label per bar, oldest first (for example the date).
 	 * @param array<int, array{name: string, values: array<int,int>}> $series Series stacked in each bar; `values` is aligned with `$labels`.
 	 * @return void
 	 */
-	public static function render( string $id, string $title, array $labels, array $series ): void {
+	public static function render( string $id, string $title, string $unit, array $labels, array $series ): void {
 		$count  = count( $labels );
 		$totals = array_fill( 0, $count, 0 );
 
@@ -77,9 +78,9 @@ class Bar_Chart {
 			esc_attr( $id ),
 			esc_html(
 				sprintf(
-					/* translators: 1: number of days, 2: highest value of a day. */
-					_n( 'Bar chart of %1$s day. The highest value is %2$s. The same numbers are in the table below.', 'Bar chart of %1$s days. The highest value is %2$s. The same numbers are in the table below.', $count, 'rag-interaction-logger-monitor' ),
-					number_format_i18n( $count ),
+					/* translators: 1: number of bars, already worded, e.g. "7 days" or "12 months", 2: highest value of a bar. */
+					__( 'Bar chart of %1$s. The highest value is %2$s. The same numbers are in the table below.', 'rag-interaction-logger-monitor' ),
+					$unit,
 					number_format_i18n( $max )
 				)
 			)

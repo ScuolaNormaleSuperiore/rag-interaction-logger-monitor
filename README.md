@@ -6,7 +6,8 @@ Requires WordPress 7.1+ and PHP 8.3+ (with the `sodium` extension), and a MySQL 
 
 ## Features
 
-- **Dashboard** – turns, durations, indicators (generated, fast reply, incomplete, blocks, Guardrails, recall, tools) and daily charts, with a legend.
+- **Dashboard** – turns, durations, indicators (generated, fast reply, incomplete, blocks, Guardrails, recall, tools), the use of each tool or form, and blocks by verdict, with a collapsible legend.
+- **Daily trend** – the same figures charted over time: one bar per day up to a month, per week up to about six months, and per month beyond that, so a chart never has to draw too many bars.
 - **Interactions** – a paginated list with filters and a text search; the search text travels in a POST body, never in a URL.
 - **Detail** – every field of one interaction, with a comparison of the generated and delivered answers.
 - **Anomalies** – predefined views, each linking to the filtered list.

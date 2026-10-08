@@ -14,6 +14,7 @@ use RILM\Admin\Detail_Page;
 use RILM\Admin\Interactions_Page;
 use RILM\Admin\Menu;
 use RILM\Admin\Settings_Page;
+use RILM\Admin\Trend_Page;
 use RILM\Plugin;
 use WP_UnitTestCase;
 use WPDieException;
@@ -100,9 +101,32 @@ class MenuTest extends WP_UnitTestCase {
 
 		$this->assertContains( Menu::SLUG_DASHBOARD, $top_level_slugs );
 		$this->assertSame(
-			array( Menu::SLUG_DASHBOARD, Menu::SLUG_INTERACTIONS, Menu::SLUG_ANOMALIES, Menu::SLUG_SETTINGS ),
+			array( Menu::SLUG_DASHBOARD, Menu::SLUG_TREND, Menu::SLUG_INTERACTIONS, Menu::SLUG_ANOMALIES, Menu::SLUG_SETTINGS ),
 			$this->submenu_slugs()
 		);
+	}
+
+	/**
+	 * The Trend page has a shorter menu label than its page title (the browser tab).
+	 *
+	 * @return void
+	 */
+	public function test_trend_menu_label_differs_from_its_page_title(): void {
+		$this->login_as( 'administrator' );
+
+		do_action( 'admin_menu' );
+
+		$trend = null;
+
+		foreach ( $GLOBALS['submenu'][ Menu::SLUG_DASHBOARD ] as $item ) {
+			if ( Menu::SLUG_TREND === $item[2] ) {
+				$trend = $item;
+			}
+		}
+
+		$this->assertNotNull( $trend, 'The Trend entry is registered.' );
+		$this->assertSame( 'Trends', $trend[0], 'Menu label.' );
+		$this->assertSame( 'Daily trend', $trend[3], 'Page title.' );
 	}
 
 	/**
@@ -219,6 +243,7 @@ class MenuTest extends WP_UnitTestCase {
 	public static function provide_page_classes(): array {
 		return array(
 			'dashboard'    => array( Dashboard_Page::class ),
+			'trend'        => array( Trend_Page::class ),
 			'interactions' => array( Interactions_Page::class ),
 			'anomalies'    => array( Anomalies_Page::class ),
 			'settings'     => array( Settings_Page::class ),
