@@ -135,10 +135,16 @@ class Interactions_List_Table extends \WP_List_Table {
 	 * @return array<string, string>
 	 */
 	public function get_columns() {
-		return array(
-			'ts'             => __( 'Date and time', 'rag-interaction-logger-monitor' ),
-			'outcome'        => __( 'Outcome', 'rag-interaction-logger-monitor' ),
-			'instance'       => __( 'Instance', 'rag-interaction-logger-monitor' ),
+		$columns = array(
+			'ts'      => __( 'Date and time', 'rag-interaction-logger-monitor' ),
+			'outcome' => __( 'Outcome', 'rag-interaction-logger-monitor' ),
+		);
+
+		if ( null !== $this->repository && $this->repository->supports_tools() ) {
+			$columns['tools'] = __( 'Tool', 'rag-interaction-logger-monitor' );
+		}
+
+		return $columns + array(
 			'user_id'        => __( 'User', 'rag-interaction-logger-monitor' ),
 			'duration_ms'    => __( 'Duration', 'rag-interaction-logger-monitor' ),
 			'guard'          => __( 'Guardrails', 'rag-interaction-logger-monitor' ),
@@ -162,7 +168,6 @@ class Interactions_List_Table extends \WP_List_Table {
 		return array(
 			'ts'          => array( 'ts', true ),
 			'outcome'     => array( 'outcome', false ),
-			'instance'    => array( 'instance', false ),
 			'user_id'     => array( 'user_id', false ),
 			'duration_ms' => array( 'duration_ms', false ),
 		);
@@ -286,6 +291,20 @@ class Interactions_List_Table extends \WP_List_Table {
 	}
 
 	/**
+	 * Column: whether one or more tools were invoked.
+	 *
+	 * @param Interaction $item Row.
+	 * @return string
+	 */
+	public function column_tools( $item ) {
+		if ( null !== $item->tools_used && '' !== trim( $item->tools_used ) ) {
+			return '<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><span class="screen-reader-text">' . esc_html__( 'Tools were invoked', 'rag-interaction-logger-monitor' ) . '</span>';
+		}
+
+		return '<span aria-hidden="true">&mdash;</span><span class="screen-reader-text">' . esc_html__( 'No tools were invoked', 'rag-interaction-logger-monitor' ) . '</span>';
+	}
+
+	/**
 	 * Column: duration in milliseconds.
 	 *
 	 * @param Interaction $item Row.
@@ -306,15 +325,17 @@ class Interactions_List_Table extends \WP_List_Table {
 	}
 
 	/**
-	 * Column: whether Guardrails ran, as text.
+	 * Column: whether Guardrails ran, as a compact accessible status.
 	 *
 	 * @param Interaction $item Row.
 	 * @return string
 	 */
 	public function column_guard( $item ) {
-		return $item->guard_present
-			? esc_html__( 'Present', 'rag-interaction-logger-monitor' )
-			: esc_html__( 'Absent', 'rag-interaction-logger-monitor' );
+		if ( $item->guard_present ) {
+			return '<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><span class="screen-reader-text">' . esc_html__( 'Guardrails were executed', 'rag-interaction-logger-monitor' ) . '</span>';
+		}
+
+		return '<span aria-hidden="true">&mdash;</span><span class="screen-reader-text">' . esc_html__( 'Guardrails were not executed', 'rag-interaction-logger-monitor' ) . '</span>';
 	}
 
 	/**
@@ -358,7 +379,7 @@ class Interactions_List_Table extends \WP_List_Table {
 	}
 
 	/**
-	 * Column: plain text values (instance, user).
+	 * Column: plain text values (user).
 	 *
 	 * @param Interaction $item        Row.
 	 * @param string      $column_name Column name.
@@ -366,8 +387,6 @@ class Interactions_List_Table extends \WP_List_Table {
 	 */
 	protected function column_default( $item, $column_name ) {
 		switch ( $column_name ) {
-			case 'instance':
-				return esc_html( $item->instance );
 			case 'user_id':
 				return esc_html( $item->user_id );
 			default:

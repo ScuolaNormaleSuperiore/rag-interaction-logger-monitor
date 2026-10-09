@@ -171,6 +171,11 @@ class Interaction_Repository {
 		$preview = (int) ( self::PREVIEW_LENGTH + 1 );
 		$columns = self::LIST_COLUMNS . ', LEFT( question, ' . $preview . ' ) AS question, LEFT( delivered, ' . $preview . ' ) AS delivered';
 
+		// This short field lets the list show whether tools ran, without loading their input or output.
+		if ( $this->supports_tools() ) {
+			$columns .= ', tools_used';
+		}
+
 		$params[] = $filters->per_page();
 		$params[] = $filters->offset();
 

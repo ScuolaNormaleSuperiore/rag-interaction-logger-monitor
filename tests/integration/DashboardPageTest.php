@@ -401,17 +401,17 @@ class DashboardPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The default period is the last week, and the period is read in local time.
+	 * The default period is today, and the period is read in local time.
 	 *
 	 * @return void
 	 */
-	public function test_default_period_is_last_week(): void {
+	public function test_default_period_is_today(): void {
 		$this->load();
 
 		$output = $this->render( $this->page() );
 
-		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
-		$this->assertMatchesRegularExpression( '/<option value="week" selected=\'selected\'>/', $output );
+		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
+		$this->assertMatchesRegularExpression( '/<option value="today" selected=\'selected\'>/', $output );
 		$this->assertStringContainsString( 'Europe/Rome', $output );
 	}
 
@@ -432,16 +432,16 @@ class DashboardPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Links built on "today" keep it, and links on the default period leave it out.
+	 * Links built on a non-default period keep it, and links on the default period leave it out.
 	 *
 	 * @return void
 	 */
-	public function test_links_keep_today_and_omit_the_default_period(): void {
-		$_GET = array( 'period' => 'today' );
+	public function test_links_keep_a_non_default_period_and_omit_the_default_period(): void {
+		$_GET = array( 'period' => 'week' );
 		$this->load();
 
 		foreach ( $this->list_links( $this->render( $this->page() ) ) as $index => $args ) {
-			$this->assertSame( 'today', $args['period'], 'Link ' . $index );
+			$this->assertSame( 'week', $args['period'], 'Link ' . $index );
 		}
 
 		$_GET               = array();
@@ -465,8 +465,8 @@ class DashboardPageTest extends WP_UnitTestCase {
 
 		$output = $this->render( $this->page() );
 
-		$this->assertStringContainsString( 'The period was ignored because its value is not valid: the default period (Last week) is shown.', $output );
-		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000'", $this->reader->queries[0] );
+		$this->assertStringContainsString( 'The period was ignored because its value is not valid: the default period (Today) is shown.', $output );
+		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000'", $this->reader->queries[0] );
 	}
 
 	/**

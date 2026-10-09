@@ -186,9 +186,26 @@ class InteractionsPageTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Generated', $output );
 		$this->assertStringContainsString( 'site-a', $output );
 		$this->assertStringContainsString( '1,500 ms', $output );
-		$this->assertStringContainsString( 'Present', $output );
+		$this->assertStringContainsString( 'dashicons-yes-alt', $output );
+		$this->assertStringContainsString( 'Guardrails were executed', $output );
 		$this->assertStringContainsString( '>None<', $output );
 		$this->assertStringContainsString( 'Europe/Rome', $output, 'The time zone is declared.' );
+	}
+
+	/**
+	 * The list uses a compact, accessible check mark when the tools column exists.
+	 *
+	 * @return void
+	 */
+	public function test_tools_column_shows_an_invocation_check_mark(): void {
+		$this->reader->rows = array( array( $this->row( array( 'tools_used' => 'web_search' ) ) ) );
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringContainsString( '>Tool<', $output );
+		$this->assertStringContainsString( 'dashicons-yes-alt', $output );
+		$this->assertStringContainsString( 'Tools were invoked', $output );
+		$this->assertStringContainsString( ', tools_used FROM ', implode( "\n", $this->reader->queries ) );
 	}
 
 	/**
@@ -276,15 +293,15 @@ class InteractionsPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Without a chosen period the list shows the last week.
+	 * Without a chosen period the list shows today.
 	 *
 	 * @return void
 	 */
-	public function test_default_period_is_last_week(): void {
+	public function test_default_period_is_today(): void {
 		$output = $this->render( $this->page() );
 
-		$this->assertStringContainsString( "ts >= '2026-09-25 12:30:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
-		$this->assertMatchesRegularExpression( '/<option value="week" selected=\'selected\'>/', $output );
+		$this->assertStringContainsString( "ts >= '2026-10-01 22:00:00.000' AND ts <= '2026-10-02 12:30:00.000'", $this->reader->queries[0] );
+		$this->assertMatchesRegularExpression( '/<option value="today" selected=\'selected\'>/', $output );
 	}
 
 	/**
@@ -315,14 +332,14 @@ class InteractionsPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The redirect for an empty search keeps "today", which is not the default, and omits the default period.
+	 * The redirect for an empty search keeps "week", which is not the default, and omits the default period.
 	 *
 	 * @return void
 	 */
-	public function test_redirect_keeps_today_and_omits_the_default_period(): void {
+	public function test_redirect_keeps_a_non_default_period_and_omits_the_default_period(): void {
 		$this->post(
 			array(
-				'period' => 'today',
+				'period' => 'week',
 				'search' => '',
 			)
 		);
@@ -330,11 +347,11 @@ class InteractionsPageTest extends WP_UnitTestCase {
 		$page = $this->page();
 		$page->handle_request();
 
-		$this->assertStringContainsString( 'period=today', (string) $page->redirected );
+		$this->assertStringContainsString( 'period=week', (string) $page->redirected );
 
 		$this->post(
 			array(
-				'period' => 'week',
+				'period' => 'today',
 				'search' => '',
 			)
 		);

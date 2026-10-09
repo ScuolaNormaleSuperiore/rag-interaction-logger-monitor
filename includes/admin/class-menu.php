@@ -158,9 +158,10 @@ class Menu {
 			array( new Settings_Page(), 'render' )
 		);
 
-		// An empty parent slug registers a page reachable by URL but absent from every menu.
+		// The `options.php` parent registers a page reachable by URL but absent from every menu; an empty
+		// parent would leave the global $title null and trigger a strip_tags() deprecation on PHP 8.1+.
 		$detail = add_submenu_page(
-			'',
+			'options.php',
 			__( 'Interaction detail', 'rag-interaction-logger-monitor' ),
 			__( 'Interaction detail', 'rag-interaction-logger-monitor' ),
 			self::CAPABILITY,

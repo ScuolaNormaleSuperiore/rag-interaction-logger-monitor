@@ -14,6 +14,7 @@ use RILM\Admin\Settings_Sanitizer;
 use RILM\Config\Config;
 use RILM\Database\Connection;
 use RILM\Database\Connection_Tester;
+use RILM\Repository\Period;
 use WP_UnitTestCase;
 use WPDieException;
 
@@ -104,6 +105,18 @@ class SettingsTest extends WP_UnitTestCase {
 			),
 			get_option( Config::OPTION_NAME )
 		);
+	}
+
+	/**
+	 * A permitted default period is stored with the other settings.
+	 *
+	 * @return void
+	 */
+	public function test_default_period_is_saved(): void {
+		update_option( Config::OPTION_NAME, array( 'default_period' => 'month' ) );
+
+		$this->assertSame( 'month', get_option( Config::OPTION_NAME )['default_period'] );
+		$this->assertSame( 'month', Period::default_preset() );
 	}
 
 	/**
@@ -595,6 +608,6 @@ class SettingsTest extends WP_UnitTestCase {
 		global $wp_settings_sections, $wp_settings_fields;
 
 		$this->assertArrayHasKey( Settings::SECTION, $wp_settings_sections[ Menu::SLUG_SETTINGS ] );
-		$this->assertCount( count( Config::FIELDS ) + 1, $wp_settings_fields[ Menu::SLUG_SETTINGS ][ Settings::SECTION ], 'The fields of the settings array plus the password.' );
+		$this->assertCount( count( Config::FIELDS ) + 2, $wp_settings_fields[ Menu::SLUG_SETTINGS ][ Settings::SECTION ], 'The fields of the settings array, the default period and the password.' );
 	}
 }

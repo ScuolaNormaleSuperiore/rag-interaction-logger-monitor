@@ -315,7 +315,6 @@ class LocalizationTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'What is the opening time?', $output );
 		$this->assertStringContainsString( 'Dalle 9 alle 17.', $output );
 		$this->assertStringContainsString( 'prompt_injection', $output );
-		$this->assertStringContainsString( 'sito-ict', $output );
 	}
 
 	/**

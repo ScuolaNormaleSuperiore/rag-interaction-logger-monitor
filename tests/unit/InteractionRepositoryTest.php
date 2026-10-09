@@ -139,9 +139,26 @@ class InteractionRepositoryTest extends TestCase {
 		$query = $this->last_query();
 
 		$this->assertStringNotContainsString( 'llm_answer', $query );
-		$this->assertStringNotContainsString( 'tool_', $query );
+		$this->assertStringNotContainsString( 'tool_input', $query );
+		$this->assertStringNotContainsString( 'tool_output', $query );
 		$this->assertStringNotContainsString( 'recall_sources', $query );
 		$this->assertStringNotContainsString( 'SELECT *', $query );
+	}
+
+	/**
+	 * The compact tool indicator only needs the names of the tools used.
+	 *
+	 * @return void
+	 */
+	public function test_find_page_selects_tools_used_when_available(): void {
+		$repository = new Interaction_Repository( $this->db, self::config(), array( 'tools_used', 'tool_input', 'tool_output' ) );
+
+		$repository->find_page( self::filters() );
+
+		$query = $this->last_query();
+		$this->assertStringContainsString( ', tools_used FROM ', $query );
+		$this->assertStringNotContainsString( 'tool_input', $query );
+		$this->assertStringNotContainsString( 'tool_output', $query );
 	}
 
 	/**

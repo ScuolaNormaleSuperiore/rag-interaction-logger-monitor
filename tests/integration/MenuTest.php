@@ -140,8 +140,8 @@ class MenuTest extends WP_UnitTestCase {
 		do_action( 'admin_menu' );
 
 		$this->assertNotContains( Menu::SLUG_DETAIL, $this->submenu_slugs() );
-		$this->assertContains( Menu::SLUG_DETAIL, array_column( $GLOBALS['submenu'][''] ?? array(), 2 ) );
-		$this->assertArrayHasKey( get_plugin_page_hookname( Menu::SLUG_DETAIL, '' ), $GLOBALS['_registered_pages'] );
+		$this->assertContains( Menu::SLUG_DETAIL, array_column( $GLOBALS['submenu']['options.php'] ?? array(), 2 ) );
+		$this->assertArrayHasKey( get_plugin_page_hookname( Menu::SLUG_DETAIL, 'options.php' ), $GLOBALS['_registered_pages'] );
 	}
 
 	/**

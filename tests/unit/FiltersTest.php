@@ -36,9 +36,9 @@ class FiltersTest extends TestCase {
 	public function test_defaults(): void {
 		$filters = self::filters( array() );
 
-		$this->assertSame( Period::WEEK, $filters->period()->key(), 'The default period is the last week.' );
+		$this->assertSame( Period::TODAY, $filters->period()->key(), 'The default period is today.' );
 		$this->assertSame( Period::DEFAULT_PRESET, $filters->period()->key() );
-		$this->assertSame( '2026-09-25 12:30:00.000', $filters->period()->start_utc() );
+		$this->assertSame( '2026-10-01 22:00:00.000', $filters->period()->start_utc() );
 		$this->assertSame( '2026-10-02 12:30:00.000', $filters->period()->end_utc() );
 		$this->assertSame( 'ts', $filters->orderby() );
 		$this->assertSame( 'DESC', $filters->order() );
@@ -376,14 +376,15 @@ class FiltersTest extends TestCase {
 	}
 
 	/**
-	 * The default period is left out of the URL, and every other one, today included, is written out.
+	 * The default period (today) is left out of the URL, and every other one is written out.
 	 *
 	 * @return void
 	 */
 	public function test_only_the_default_period_is_left_out_of_the_url(): void {
 		$this->assertSame( array(), self::filters( array( 'period' => Period::DEFAULT_PRESET ) )->to_query_args() );
 		$this->assertSame( array(), self::filters( array() )->to_query_args() );
-		$this->assertSame( array( 'period' => 'today' ), self::filters( array( 'period' => 'today' ) )->to_query_args() );
+		$this->assertSame( array(), self::filters( array( 'period' => 'today' ) )->to_query_args() );
+		$this->assertSame( array( 'period' => 'week' ), self::filters( array( 'period' => 'week' ) )->to_query_args() );
 		$this->assertSame( array( 'period' => 'year' ), self::filters( array( 'period' => 'year' ) )->to_query_args() );
 	}
 

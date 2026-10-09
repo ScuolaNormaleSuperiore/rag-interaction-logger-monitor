@@ -434,7 +434,6 @@ class Interactions_Page {
 					array(
 						'ts'          => __( 'Date and time', 'rag-interaction-logger-monitor' ),
 						'outcome'     => __( 'Outcome', 'rag-interaction-logger-monitor' ),
-						'instance'    => __( 'Instance', 'rag-interaction-logger-monitor' ),
 						'user_id'     => __( 'User', 'rag-interaction-logger-monitor' ),
 						'duration_ms' => __( 'Duration', 'rag-interaction-logger-monitor' ),
 					),

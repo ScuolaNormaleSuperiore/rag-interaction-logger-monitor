@@ -8,6 +8,7 @@
 namespace RILM\Admin;
 
 use RILM\Config\Config;
+use RILM\Repository\Period;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Validates the values submitted from the Settings page.
  *
- * Only the five permitted fields are accepted: anything else, including the
+ * Only the permitted connection fields and the default period are accepted: anything else, including the
  * password, is dropped. A field that is invalid keeps its previous value.
  */
 class Settings_Sanitizer {
@@ -78,6 +79,18 @@ class Settings_Sanitizer {
 			}
 
 			$result[ $key ] = 'port' === $key ? (string) (int) $value : $value;
+		}
+
+		if ( isset( $input[ Period::DEFAULT_SETTING ] ) || isset( $previous[ Period::DEFAULT_SETTING ] ) ) {
+			$old                               = isset( $previous[ Period::DEFAULT_SETTING ] )
+				&& is_string( $previous[ Period::DEFAULT_SETTING ] )
+				&& in_array( $previous[ Period::DEFAULT_SETTING ], Period::PRESETS, true )
+				? $previous[ Period::DEFAULT_SETTING ]
+				: Period::DEFAULT_PRESET;
+			$value                             = isset( $input[ Period::DEFAULT_SETTING ] ) && is_scalar( $input[ Period::DEFAULT_SETTING ] )
+				? sanitize_text_field( (string) $input[ Period::DEFAULT_SETTING ] )
+				: '';
+			$result[ Period::DEFAULT_SETTING ] = in_array( $value, Period::PRESETS, true ) ? $value : $old;
 		}
 
 		return $result;

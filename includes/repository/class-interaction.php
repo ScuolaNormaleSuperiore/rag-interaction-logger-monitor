@@ -135,7 +135,7 @@ class Interaction {
 	public $recall_top_score;
 
 	/**
-	 * Tools used (column added later, only in the detail).
+	 * Tools used (column added later, also selected for the compact list indicator).
 	 *
 	 * @var string|null
 	 */

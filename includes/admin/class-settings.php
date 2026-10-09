@@ -9,6 +9,7 @@ namespace RILM\Admin;
 
 use RILM\Config\Config;
 use RILM\Config\Secret_Store;
+use RILM\Repository\Period;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -144,6 +145,15 @@ class Settings {
 				)
 			);
 		}
+
+		add_settings_field(
+			'rilm-default-period',
+			__( 'Default period', 'rag-interaction-logger-monitor' ),
+			array( $this, 'render_default_period_field' ),
+			Menu::SLUG_SETTINGS,
+			self::SECTION,
+			array( 'label_for' => 'rilm-default-period' )
+		);
 
 		// The password has its own option: it is never part of the readable settings array.
 		register_setting(
@@ -325,6 +335,26 @@ class Settings {
 			esc_attr( $id ),
 			esc_html( $this->description( $key, $locked ) )
 		);
+	}
+
+	/**
+	 * Prints the default period selector used when a page URL has no period.
+	 *
+	 * @return void
+	 */
+	public function render_default_period_field(): void {
+		printf( '<select id="rilm-default-period" name="%1$s">', esc_attr( Config::OPTION_NAME . '[' . Period::DEFAULT_SETTING . ']' ) );
+
+		foreach ( Period_Fields::options() as $value => $label ) {
+			if ( Period::CUSTOM === $value ) {
+				continue;
+			}
+
+			printf( '<option value="%1$s"%2$s>%3$s</option>', esc_attr( $value ), selected( $value, Period::default_preset(), false ), esc_html( $label ) );
+		}
+
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'Used by Dashboard, Trends, Interactions and Anomalies when no period is selected in the URL.', 'rag-interaction-logger-monitor' ) . '</p>';
 	}
 
 	/**

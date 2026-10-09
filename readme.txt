@@ -4,7 +4,7 @@ Tags: rag, logs, monitoring, chatbot, admin
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -90,10 +90,19 @@ The plugin shows, to administrators only, what the logger recorded: questions, a
 
 == Changelog ==
 
+= 1.0.1 =
+* Bug fixing.
+* Added the Tools column to the Interactions list.
+* Removed the Instance column from the Interactions list.
+* Default period is now Today, configurable in Settings.
+
 = 1.0.0 =
 * First version: Dashboard with indicator legend, Daily trend, Interactions list with filters and search, Interaction detail, Anomalies, tools and forms filters and figures, Settings with encrypted password, Italian translation.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Bug fixes, a Tools column instead of Instance in the Interactions list, and a configurable default period (Today).
 
 = 1.0.0 =
 First version.

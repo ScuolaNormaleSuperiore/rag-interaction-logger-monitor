@@ -163,7 +163,7 @@ class DetailPageTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '<th scope="row">Turn ID</th><td>turn-abc</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Outcome</th><td>Generated</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Duration</th><td>1,500 ms</td>', $output );
-		$this->assertStringContainsString( '<th scope="row">Guardrails</th><td>Present</td>', $output );
+		$this->assertStringContainsString( '<th scope="row">Guardrails</th><td>Guardrails were executed</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Input verdict</th><td>blocked</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Output verdict</th><td>toxic</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Other plugin reply</th><td>Replied</td>', $output );
@@ -558,7 +558,7 @@ class DetailPageTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Columns added later appear only when they hold a value, as escaped text.
+	 * Tool information is grouped in one complete section and escaped.
 	 *
 	 * @return void
 	 */
@@ -578,10 +578,13 @@ class DetailPageTest extends WP_UnitTestCase {
 
 		$output = $this->render( $this->page( true, array( 'tools_used', 'tool_input', 'tool_output', 'recall_sources' ) ) );
 
-		$this->assertStringContainsString( '<summary>Tools used</summary>', $output );
-		$this->assertStringContainsString( '<summary>Tool input</summary>', $output );
+		$this->assertStringContainsString( '<h2>Tool invocation</h2>', $output );
+		$this->assertStringContainsString( '>Tools were invoked<', $output );
+		$this->assertStringContainsString( '>Tools used<', $output );
+		$this->assertStringContainsString( '>Tool input<', $output );
+		$this->assertStringContainsString( '>Tool output<', $output );
 		$this->assertStringContainsString( '<summary>Recall sources</summary>', $output );
-		$this->assertStringNotContainsString( '<summary>Tool output</summary>', $output );
+		$this->assertStringContainsString( '>Not recorded<', $output );
 		$this->assertStringContainsString( '{&quot;q&quot;:&quot;&lt;b&gt;x&lt;/b&gt;&quot;}', $output );
 		$this->assertStringNotContainsString( '<b>x</b>', $output );
 	}
@@ -709,9 +712,9 @@ class DetailPageTest extends WP_UnitTestCase {
 		$assets->enqueue( get_plugin_page_hookname( Menu::SLUG_INTERACTIONS, Menu::SLUG_DASHBOARD ) );
 		$this->assertFalse( wp_style_is( 'revisions', 'enqueued' ) );
 
-		$assets->enqueue( get_plugin_page_hookname( Menu::SLUG_DETAIL, '' ) );
+		$assets->enqueue( get_plugin_page_hookname( Menu::SLUG_DETAIL, 'options.php' ) );
 		$this->assertTrue( wp_style_is( 'revisions', 'enqueued' ) );
-		$this->assertTrue( $menu->is_detail_screen( get_plugin_page_hookname( Menu::SLUG_DETAIL, '' ) ) );
+		$this->assertTrue( $menu->is_detail_screen( get_plugin_page_hookname( Menu::SLUG_DETAIL, 'options.php' ) ) );
 		$this->assertFalse( $menu->is_detail_screen( get_plugin_page_hookname( Menu::SLUG_DASHBOARD, '' ) ) );
 	}
 }

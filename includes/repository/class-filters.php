@@ -509,8 +509,8 @@ class Filters {
 	public function to_query_args(): array {
 		$args = array();
 
-		// The default preset is left out of the URL; any other one, "today" included, is written out.
-		if ( Period::DEFAULT_PRESET !== $this->period->key() ) {
+		// The configured default preset is left out of the URL; every other one is written out.
+		if ( Period::default_preset() !== $this->period->key() ) {
 			$args['period'] = $this->period->key();
 
 			if ( Period::CUSTOM === $this->period->key() ) {
@@ -571,7 +571,7 @@ class Filters {
 	 * @return Period
 	 */
 	private static function read_period( array $input, DateTimeImmutable $now, array &$errors ): Period {
-		$default = Period::preset( Period::DEFAULT_PRESET, $now );
+		$default = Period::preset( Period::default_preset(), $now );
 		$key     = self::text( $input, 'period', 10 );
 
 		if ( null === $key ) {

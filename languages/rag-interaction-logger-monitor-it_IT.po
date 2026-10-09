@@ -183,27 +183,27 @@ msgstr "Non disponibile: nessun turno con cui confrontare."
 
 #: includes/admin/class-dashboard-page.php:346
 msgid "Tools and forms"
-msgstr "Strumenti e moduli"
+msgstr "Tool e moduli"
 
 #: includes/admin/class-dashboard-page.php:350
 msgid "The tools could not be loaded."
-msgstr "Non è stato possibile caricare gli strumenti."
+msgstr "Non è stato possibile caricare i tool."
 
 #: includes/admin/class-dashboard-page.php:357
 msgid "No tool or form ran in this period."
-msgstr "Nessuno strumento o modulo è stato eseguito in questo periodo."
+msgstr "Nessun tool o modulo è stato eseguito in questo periodo."
 
 #: includes/admin/class-dashboard-page.php:362
 msgid "A turn that used several tools is counted in each of them, so the counts can add up to more than the turns that used tools."
-msgstr "Un turno che ha usato più strumenti è contato in ciascuno di essi, quindi i conteggi possono sommarsi a più dei turni che hanno usato strumenti."
+msgstr "Un turno che ha usato più tool è contato in ciascuno di essi, quindi i conteggi possono sommarsi a più dei turni che hanno usato tool."
 
 #: includes/admin/class-dashboard-page.php:366
 msgid "There are too many different combinations of tools in this period: the counts below are partial. Choose a shorter period."
-msgstr "In questo periodo ci sono troppe combinazioni diverse di strumenti: i conteggi qui sotto sono parziali. Scegli un periodo più breve."
+msgstr "In questo periodo ci sono troppe combinazioni diverse di tool: i conteggi qui sotto sono parziali. Scegli un periodo più breve."
 
 #: includes/admin/class-dashboard-page.php:374
 msgid "Tool or form"
-msgstr "Strumento o modulo"
+msgstr "Tool o modulo"
 
 #: includes/admin/class-dashboard-page.php:405
 msgid "What the indicators mean"
@@ -386,15 +386,15 @@ msgstr "Le risposte sono diverse. Le righe modificate sono evidenziate."
 #: includes/admin/class-interactions-page.php:277
 #: includes/admin/class-interactions-page.php:342
 msgid "Tools used"
-msgstr "Strumenti usati"
+msgstr "Tool usati"
 
 #: includes/admin/class-detail-page.php:272
 msgid "Tool input"
-msgstr "Input dello strumento"
+msgstr "Input del tool"
 
 #: includes/admin/class-detail-page.php:273
 msgid "Tool output"
-msgstr "Output dello strumento"
+msgstr "Output del tool"
 
 #: includes/admin/class-detail-page.php:308
 #: includes/admin/class-detail-page.php:314
@@ -470,19 +470,19 @@ msgstr "Risposta modificata senza verdetto sull'output"
 #: includes/admin/class-trend-page.php:267
 #: includes/admin/class-trend-page.php:287
 msgid "Turns that used tools"
-msgstr "Turni che hanno usato strumenti"
+msgstr "Turni che hanno usato tool"
 
 #: includes/admin/class-indicator-texts.php:144
 msgid "Tools ran but the turn is incomplete"
-msgstr "Strumenti eseguiti ma turno incompleto"
+msgstr "Tool eseguiti ma turno incompleto"
 
 #: includes/admin/class-indicator-texts.php:146
 msgid "Tools ran without Guardrails"
-msgstr "Strumenti eseguiti senza Guardrails"
+msgstr "Tool eseguiti senza Guardrails"
 
 #: includes/admin/class-indicator-texts.php:148
 msgid "Tools ran and the output was blocked"
-msgstr "Strumenti eseguiti e output bloccato"
+msgstr "Tool eseguiti e output bloccato"
 
 #: includes/admin/class-indicator-texts.php:164
 msgid "Incomplete interactions"
@@ -522,19 +522,19 @@ msgstr "La risposta consegnata è diversa da quella generata, ma nessun verdetto
 
 #: includes/admin/class-indicator-texts.php:193
 msgid "At least one tool ran during the turn; here a tool also means a form. A turn that used several is counted once in this row and once for each of them in the table of tools and forms, so the counts of that table can add up to more than this row."
-msgstr "Almeno uno strumento è stato eseguito durante il turno; qui «strumento» comprende anche i moduli (form). Un turno che ne ha usati più d'uno è contato una volta in questa riga e una volta per ciascuno nella tabella degli strumenti e dei moduli, quindi i conteggi di quella tabella possono sommarsi a più di questa riga."
+msgstr "Almeno un tool è stato eseguito durante il turno; qui «tool» comprende anche i moduli (form). Un turno che ne ha usati più d'uno è contato una volta in questa riga e una volta per ciascuno nella tabella dei tool e dei moduli, quindi i conteggi di quella tabella possono sommarsi a più di questa riga."
 
 #: includes/admin/class-indicator-texts.php:195
 msgid "At least one tool or form ran, but the turn started and never finished."
-msgstr "Almeno uno strumento o modulo è stato eseguito, ma il turno è iniziato e non è mai terminato."
+msgstr "Almeno un tool o modulo è stato eseguito, ma il turno è iniziato e non è mai terminato."
 
 #: includes/admin/class-indicator-texts.php:197
 msgid "At least one tool or form ran in a turn Guardrails did not handle. The input and the results of tools are not checked by any guard, so these turns had no check at all."
-msgstr "Almeno uno strumento o modulo è stato eseguito in un turno che Guardrails non ha gestito. L'input e i risultati degli strumenti non sono controllati da nessuna guardia, quindi questi turni non hanno avuto alcun controllo."
+msgstr "Almeno un tool o modulo è stato eseguito in un turno che Guardrails non ha gestito. L'input e i risultati dei tool non sono controllati da nessuna guardia, quindi questi turni non hanno avuto alcun controllo."
 
 #: includes/admin/class-indicator-texts.php:199
 msgid "At least one tool or form ran and Guardrails recorded a verdict on the answer: a block was recorded."
-msgstr "Almeno uno strumento o modulo è stato eseguito e Guardrails ha registrato un verdetto sulla risposta: è stato registrato un blocco."
+msgstr "Almeno un tool o modulo è stato eseguito e Guardrails ha registrato un verdetto sulla risposta: è stato registrato un blocco."
 
 #: includes/admin/class-indicator-texts.php:213
 msgid "of generated answers"
@@ -686,7 +686,7 @@ msgstr "Utente (esatto)"
 
 #: includes/admin/class-interactions-page.php:419
 msgid "Tool"
-msgstr "Strumento"
+msgstr "Tool"
 
 #: includes/admin/class-interactions-page.php:424
 msgid "Only interactions with an empty recall"
@@ -945,7 +945,7 @@ msgstr "Nessun turno nel periodo."
 
 #: includes/admin/class-trend-page.php:258
 msgid "Without tools"
-msgstr "Senza strumenti"
+msgstr "Senza tool"
 
 #: includes/admin/class-trend-page.php:275
 msgid "A turn blocked on both input and output counts in both series of the third chart."
@@ -965,7 +965,7 @@ msgstr "Blocchi alla settimana"
 
 #: includes/admin/class-trend-page.php:338
 msgid "Turns with and without tools per week"
-msgstr "Turni settimanali con e senza strumenti"
+msgstr "Turni settimanali con e senza tool"
 
 #: includes/admin/class-trend-page.php:339
 msgid "Week"
@@ -989,7 +989,7 @@ msgstr "Blocchi al mese"
 
 #: includes/admin/class-trend-page.php:346
 msgid "Turns with and without tools per month"
-msgstr "Turni mensili con e senza strumenti"
+msgstr "Turni mensili con e senza tool"
 
 #: includes/admin/class-trend-page.php:347
 msgid "Month"
@@ -1013,7 +1013,7 @@ msgstr "Blocchi al giorno"
 
 #: includes/admin/class-trend-page.php:354
 msgid "Turns with and without tools per day"
-msgstr "Turni giornalieri con e senza strumenti"
+msgstr "Turni giornalieri con e senza tool"
 
 #: includes/admin/class-trend-page.php:355
 msgid "Day"
@@ -1046,3 +1046,39 @@ msgid "%s day"
 msgid_plural "%s days"
 msgstr[0] "%s giorno"
 msgstr[1] "%s giorni"
+
+#: includes/admin/class-detail-page.php:292
+msgid "Tool invocation"
+msgstr "Invocazione del tool"
+
+#: includes/admin/class-detail-page.php:295
+msgid "Status"
+msgstr "Stato"
+
+#: includes/admin/class-detail-page.php:298
+#: includes/admin/class-interactions-list-table.php:303
+msgid "Tools were invoked"
+msgstr "Sono stati invocati dei tool"
+
+#: includes/admin/class-detail-page.php:299
+#: includes/admin/class-interactions-list-table.php:306
+msgid "No tools were invoked"
+msgstr "Non sono stati invocati tool"
+
+#: includes/admin/class-detail-page.php:174
+#: includes/admin/class-interactions-list-table.php:337
+msgid "Guardrails were executed"
+msgstr "Guardrails eseguiti"
+
+#: includes/admin/class-detail-page.php:175
+#: includes/admin/class-interactions-list-table.php:340
+msgid "Guardrails were not executed"
+msgstr "Guardrails non eseguiti"
+
+#: includes/admin/class-settings.php:151
+msgid "Default period"
+msgstr "Periodo predefinito"
+
+#: includes/admin/class-settings.php:357
+msgid "Used by Dashboard, Trends, Interactions and Anomalies when no period is selected in the URL."
+msgstr "Usato da Dashboard, Andamenti, Interazioni e Anomalie quando nell'URL non è indicato alcun periodo."

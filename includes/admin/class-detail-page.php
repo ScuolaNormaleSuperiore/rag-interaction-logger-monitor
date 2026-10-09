@@ -171,8 +171,8 @@ class Detail_Page {
 					number_format_i18n( $interaction->duration_ms )
 				),
 			__( 'Guardrails', 'rag-interaction-logger-monitor' ) => $interaction->guard_present
-				? __( 'Present', 'rag-interaction-logger-monitor' )
-				: __( 'Absent', 'rag-interaction-logger-monitor' ),
+				? __( 'Guardrails were executed', 'rag-interaction-logger-monitor' )
+				: __( 'Guardrails were not executed', 'rag-interaction-logger-monitor' ),
 			__( 'Input verdict', 'rag-interaction-logger-monitor' ) => $this->verdict_label( $interaction->input_verdict ),
 			__( 'Output verdict', 'rag-interaction-logger-monitor' ) => $this->verdict_label( $interaction->output_verdict ),
 			__( 'Other plugin reply', 'rag-interaction-logger-monitor' ) => $this->reply_label( $interaction->other_plugin_reply ),
@@ -261,33 +261,69 @@ class Detail_Page {
 	}
 
 	/**
-	 * Prints the columns added to the table later, only those that hold a value.
+	 * Prints fields from columns added to the table later.
 	 *
 	 * @param Interaction $interaction Interaction to show.
 	 * @return void
 	 */
 	private function render_optional_columns( Interaction $interaction ): void {
-		$sections = array(
-			__( 'Tools used', 'rag-interaction-logger-monitor' )    => $interaction->tools_used,
-			__( 'Tool input', 'rag-interaction-logger-monitor' )    => $interaction->tool_input,
-			__( 'Tool output', 'rag-interaction-logger-monitor' )   => $interaction->tool_output,
-		);
-
-		foreach ( $sections as $title => $text ) {
-			if ( null === $text ) {
-				continue;
-			}
-
-			printf(
-				'<details class="rilm-details"><summary>%1$s</summary><div class="rilm-text rilm-full-text">%2$s</div></details>',
-				esc_html( (string) $title ),
-				esc_html( $text )
-			);
-		}
+		$this->render_tool_invocation( $interaction );
 
 		if ( null !== $interaction->recall_sources ) {
 			$this->render_recall_sources( $interaction->recall_sources );
 		}
+	}
+
+	/**
+	 * Prints all recorded information about tool invocations in one section.
+	 *
+	 * The logger stores these fields at interaction level. When more than one tool
+	 * ran, its data may therefore describe the whole interaction rather than a
+	 * separate input and output for each individual invocation.
+	 *
+	 * @param Interaction $interaction Interaction to show.
+	 * @return void
+	 */
+	private function render_tool_invocation( Interaction $interaction ): void {
+		if ( null === $interaction->tools_used && null === $interaction->tool_input && null === $interaction->tool_output ) {
+			return;
+		}
+
+		printf( '<h2>%s</h2>', esc_html__( 'Tool invocation', 'rag-interaction-logger-monitor' ) );
+		echo '<table class="widefat striped rilm-detail-table"><tbody>';
+
+		$this->render_tool_row(
+			__( 'Status', 'rag-interaction-logger-monitor' ),
+			null !== $interaction->tools_used && '' !== trim( $interaction->tools_used )
+				? __( 'Tools were invoked', 'rag-interaction-logger-monitor' )
+				: __( 'No tools were invoked', 'rag-interaction-logger-monitor' )
+		);
+		$this->render_tool_row( __( 'Tools used', 'rag-interaction-logger-monitor' ), $interaction->tools_used );
+		$this->render_tool_row( __( 'Tool input', 'rag-interaction-logger-monitor' ), $interaction->tool_input );
+		$this->render_tool_row( __( 'Tool output', 'rag-interaction-logger-monitor' ), $interaction->tool_output );
+
+		echo '</tbody></table>';
+	}
+
+	/**
+	 * Prints one value from the tool-invocation record.
+	 *
+	 * @param string      $label Field label.
+	 * @param string|null $value Field value.
+	 * @return void
+	 */
+	private function render_tool_row( string $label, ?string $value ): void {
+		echo '<tr><th scope="row">' . esc_html( $label ) . '</th><td>';
+
+		if ( null === $value ) {
+			esc_html_e( 'Not recorded', 'rag-interaction-logger-monitor' );
+		} elseif ( '' === $value ) {
+			echo '<em>' . esc_html__( '(empty)', 'rag-interaction-logger-monitor' ) . '</em>';
+		} else {
+			echo '<div class="rilm-text rilm-full-text">' . esc_html( $value ) . '</div>';
+		}
+
+		echo '</td></tr>';
 	}
 
 	/**

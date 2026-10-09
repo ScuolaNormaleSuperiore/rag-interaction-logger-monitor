@@ -151,9 +151,8 @@ class ToolsTest extends TestCase {
 
 		$this->assertSame(
 			array(
-				'period' => 'today',
-				'tools'  => 'yes',
-				'tool'   => 'search_web',
+				'tools' => 'yes',
+				'tool'  => 'search_web',
 			),
 			$filters->to_query_args()
 		);

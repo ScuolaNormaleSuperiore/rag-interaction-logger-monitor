@@ -66,7 +66,28 @@ class Period {
 	/**
 	 * Preset used when no period is chosen, or when the chosen one is not valid.
 	 */
-	public const DEFAULT_PRESET = self::WEEK;
+	public const DEFAULT_PRESET = self::TODAY;
+
+	/**
+	 * Name of the optional default-period value in the plugin settings.
+	 */
+	public const DEFAULT_SETTING = 'default_period';
+
+	/**
+	 * Returns the saved default preset, or today's preset when it is absent or invalid.
+	 *
+	 * @return string One of PRESETS.
+	 */
+	public static function default_preset(): string {
+		if ( ! function_exists( 'get_option' ) ) {
+			return self::DEFAULT_PRESET;
+		}
+
+		$settings = get_option( 'rilm_settings', array() );
+		$value    = is_array( $settings ) && isset( $settings[ self::DEFAULT_SETTING ] ) ? $settings[ self::DEFAULT_SETTING ] : null;
+
+		return is_string( $value ) && in_array( $value, self::PRESETS, true ) ? $value : self::DEFAULT_PRESET;
+	}
 
 	/**
 	 * Length of each moving preset, in days or in months.
