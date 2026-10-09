@@ -353,6 +353,83 @@ class TrendPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The table is open by default: the user still can collapse it, but does not have to open it
+	 * first to read the exact numbers behind the charts.
+	 *
+	 * @return void
+	 */
+	public function test_daily_table_is_open_by_default(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertMatchesRegularExpression( '/<details class="rilm-details" open>\s*<summary>Show the daily figures as a table<\/summary>/', $output );
+	}
+
+	/**
+	 * Each row also shows its counts as a share of that row's own turns, not of the whole period.
+	 *
+	 * @return void
+	 */
+	public function test_daily_table_shows_percentages_of_the_rows_own_turns(): void {
+		$_GET = array( 'period' => 'week' );
+
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '<th scope="col">% incomplete</th>', $output );
+		$this->assertStringContainsString( '<th scope="col">% input blocked</th>', $output );
+		$this->assertStringContainsString( '<th scope="col">% output blocked</th>', $output );
+		$this->assertStringNotContainsString( '% used a tool', $output );
+
+		// Both hourly rows land on 2 October in Rome (see test_hours_are_grouped_by_local_day):
+		// 200 turns, 20 incomplete, 8 input blocked, 4 output blocked.
+		$this->assertMatchesRegularExpression(
+			'/<th scope="row">2026-10-02<\/th><td>200<\/td><td>20<\/td><td>8<\/td><td>4<\/td><td>10\.0%<\/td><td>4\.0%<\/td><td>2\.0%<\/td>/',
+			$output
+		);
+	}
+
+	/**
+	 * A row with no turns shows a dash for its percentages, instead of dividing by zero.
+	 *
+	 * @return void
+	 */
+	public function test_daily_table_percentage_is_a_dash_without_turns(): void {
+		$_GET = array( 'period' => 'week' );
+
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		// 2026-09-28 falls inside the week but has no hourly data: an empty, filled-in row.
+		$this->assertMatchesRegularExpression( '/<th scope="row">2026-09-28<\/th><td>0<\/td><td>0<\/td><td>0<\/td><td>0<\/td><td>–<\/td><td>–<\/td><td>–<\/td>/', $output );
+	}
+
+	/**
+	 * With the optional tools column, each row also shows the share of its own turns that used a tool.
+	 *
+	 * @return void
+	 */
+	public function test_daily_table_shows_the_tool_percentage_with_the_column(): void {
+		$_GET = array( 'period' => 'week' );
+
+		$this->load_with_tools();
+		$this->reader->rows[1][0]['tools'] = '30';
+		$this->reader->rows[1][1]['tools'] = '20';
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringContainsString( '<th scope="col">% used a tool</th>', $output );
+		// Both hourly tool counts (30 + 20) land on the same local day: 50 of 200 turns.
+		$this->assertMatchesRegularExpression(
+			'/<th scope="row">2026-10-02<\/th><td>200<\/td><td>20<\/td><td>8<\/td><td>4<\/td><td>50<\/td><td>10\.0%<\/td><td>4\.0%<\/td><td>2\.0%<\/td><td>25\.0%<\/td>/',
+			$output
+		);
+	}
+
+	/**
 	 * The 22:00 UTC hour is already the next day in Rome: both rows land on 2 October.
 	 *
 	 * @return void

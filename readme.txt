@@ -4,7 +4,7 @@ Tags: rag, logs, monitoring, chatbot, admin
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -16,10 +16,10 @@ RAG Interaction Logger Monitor is an administrator-only backoffice for the data 
 
 **Pages**
 
-* **Dashboard** – turns, average and median duration, indicators (generated, fast reply, incomplete, blocked input and output, turns Guardrails did not handle, answers generated without recalled sources, turns that used tools), the use of each tool or form, and blocks by verdict. A collapsible legend explains every indicator.
-* **Daily trend** – the same figures charted over time, one bar per day, week or month depending on how long the chosen period is, so the chart stays readable whatever the period.
+* **Dashboard** – turns, average and median duration, indicators (generated, fast reply, incomplete, blocked input and output, turns Guardrails did not handle, answers generated without recalled sources, turns that used tools), the use of each tool or form, and blocks by verdict. A collapsible legend explains every indicator. A "Test status" box shows the last interaction recorded, completed turns and incompleteness, Guardrails coverage, the block rate on only the turns Guardrails covered, and the tool-invocation rate when available.
+* **Daily trend** – the same figures charted over time, one bar per day, week or month depending on how long the chosen period is, so the chart stays readable whatever the period. Its table, open by default, also shows each count as a percentage of that row's own turns.
 * **Interactions** – a paginated list with filters (period, text search, Guardrails, verdicts, outcome, instance, user, tools and more) and sorting.
-* **Interaction detail** – every field of one interaction, with a comparison of the generated and delivered answers.
+* **Interaction detail** – every field of one interaction, with a comparison of the generated and delivered answers. Recalled sources are always shown, with a caution note that recall does not prove a source was cited or used in the delivered answer, and, when the logger records them, each source's title, a link opening in a new tab, origin, WordPress ID and type.
 * **Anomalies** – predefined views (incomplete turns, turns without Guardrails, blocks, answers changed without a verdict, empty recall, tools that ran in a risky turn), each with a count and a link to the filtered list.
 * **Settings** – the connection to the log database.
 
@@ -89,6 +89,12 @@ A turn that used several tools or forms is counted once in each of them.
 The plugin shows, to administrators only, what the logger recorded: questions, answers, user identifiers and tool data. These are personal data of your visitors; decide who may be an administrator and for how long the logger keeps them. The plugin stores no interaction data in your WordPress database, sets no cookies and contacts no external service other than the log database you configure. It stores only the connection settings (and, if you choose, the encrypted password) in two options, which are removed when the plugin is deleted.
 
 == Changelog ==
+= 1.0.2 =
+* Added a Daily trend page, split out of the Dashboard, with charts that adapt to day, week or month depending on the period.
+* Added a "Test status" box to the Dashboard.
+* Added percentages to the Daily trend table, now open by default.
+* Recalled sources now show title, link, origin, WordPress ID and type when the logger records them.
+* Clearer wording for Guardrails and Tool across the plugin.
 
 = 1.0.1 =
 * Bug fixing.
@@ -100,6 +106,9 @@ The plugin shows, to administrators only, what the logger recorded: questions, a
 * First version: Dashboard with indicator legend, Daily trend, Interactions list with filters and search, Interaction detail, Anomalies, tools and forms filters and figures, Settings with encrypted password, Italian translation.
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+New Daily trend page, Dashboard test-status box, richer recalled sources, and clearer Guardrails/Tool wording.
 
 = 1.0.1 =
 Bug fixes, a Tools column instead of Instance in the Interactions list, and a configurable default period (Today).

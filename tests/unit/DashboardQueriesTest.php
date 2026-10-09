@@ -102,6 +102,7 @@ class DashboardQueriesTest extends TestCase {
 			'zero_recall'   => '15',
 			'completed'     => '178',
 			'average_ms'    => '1234.5000',
+			'last_ts'       => '2026-10-02 12:30:00.000',
 		);
 	}
 
@@ -127,6 +128,7 @@ class DashboardQueriesTest extends TestCase {
 			. ", SUM( CASE WHEN outcome = 'generated' AND recall_count = 0 THEN 1 ELSE 0 END ) AS `zero_recall`"
 			. ", SUM( CASE WHEN outcome <> 'incomplete' AND duration_ms IS NOT NULL THEN 1 ELSE 0 END ) AS `completed`"
 			. ", AVG( CASE WHEN outcome <> 'incomplete' AND duration_ms IS NOT NULL THEN duration_ms END ) AS `average_ms`"
+			. ', MAX( ts ) AS `last_ts`'
 			. ' FROM ' . self::TABLE . ' WHERE ' . self::PERIOD,
 			$this->db->queries[0]
 		);
@@ -146,6 +148,7 @@ class DashboardQueriesTest extends TestCase {
 		$this->assertSame( 150, $summary['generated'] );
 		$this->assertSame( 178, $summary['completed'] );
 		$this->assertSame( 1234.5, $summary['average_ms'] );
+		$this->assertSame( '2026-10-02 12:30:00.000', $summary['last_ts'] );
 
 		$this->db->rows = array(
 			array(
@@ -153,6 +156,7 @@ class DashboardQueriesTest extends TestCase {
 					array(
 						'completed'  => null,
 						'average_ms' => null,
+						'last_ts'    => null,
 					)
 				),
 			),
@@ -162,6 +166,7 @@ class DashboardQueriesTest extends TestCase {
 
 		$this->assertSame( 0, $summary['completed'] );
 		$this->assertNull( $summary['average_ms'], 'No completed turn: the average is unknown, not zero.' );
+		$this->assertNull( $summary['last_ts'], 'An empty period has no last interaction.' );
 	}
 
 	/**

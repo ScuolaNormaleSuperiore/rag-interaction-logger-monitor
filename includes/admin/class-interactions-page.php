@@ -329,8 +329,8 @@ class Interactions_Page {
 				__( 'Guardrails', 'rag-interaction-logger-monitor' ),
 				array(
 					''                     => __( 'All', 'rag-interaction-logger-monitor' ),
-					Filters::GUARD_PRESENT => __( 'Present', 'rag-interaction-logger-monitor' ),
-					Filters::GUARD_ABSENT  => __( 'Absent', 'rag-interaction-logger-monitor' ),
+					Filters::GUARD_PRESENT => __( 'Executed', 'rag-interaction-logger-monitor' ),
+					Filters::GUARD_ABSENT  => __( 'Not executed', 'rag-interaction-logger-monitor' ),
 				),
 				(string) $filters->guard()
 			);

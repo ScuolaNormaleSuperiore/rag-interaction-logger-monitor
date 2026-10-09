@@ -3,7 +3,7 @@
  * Plugin Name: RAG Interaction Logger Monitor
  * Plugin URI:  https://ict.sns.it
  * Description: Administrator-only monitor for RAG Interaction Logger data.
- * Version:     1.0.1
+ * Version:     1.0.2
  * Requires at least: 7.1
  * Requires PHP: 8.3
  * Author:      ICT SNS
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'RILM_VERSION', '1.0.1' );
+define( 'RILM_VERSION', '1.0.2' );
 define( 'RILM_PLUGIN_FILE', __FILE__ );
 define( 'RILM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 

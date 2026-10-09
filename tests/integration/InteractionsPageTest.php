@@ -398,6 +398,21 @@ class InteractionsPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The Guardrails filter says "Executed"/"Not executed", not "Present"/"Absent": a turn can be
+	 * marked absent because Guardrails was never installed, which is not the same as "not present".
+	 *
+	 * @return void
+	 */
+	public function test_guardrails_filter_says_executed_not_present(): void {
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '>Executed<', $output );
+		$this->assertStringContainsString( '>Not executed<', $output );
+		$this->assertStringNotContainsString( '>Present<', $output );
+		$this->assertStringNotContainsString( '>Absent<', $output );
+	}
+
+	/**
 	 * Every other control is inside the advanced section.
 	 *
 	 * @return void

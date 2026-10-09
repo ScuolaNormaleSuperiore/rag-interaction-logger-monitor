@@ -8,6 +8,7 @@
 namespace RILM\Admin;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use RILM\Config\Config;
 use RILM\Database\Connection;
 use RILM\Database\Optional_Columns;
@@ -223,6 +224,7 @@ class Dashboard_Page {
 		};
 
 		$this->render_tiles( $report, $link );
+		$this->render_test_status( $report, $now->getTimezone() );
 		$this->render_indicators( $report, $link );
 		$this->render_tools( $report, $link );
 		$this->render_verdicts( $report, $link );
@@ -263,6 +265,117 @@ class Dashboard_Page {
 			?>
 		</p>
 		<?php
+	}
+
+	/**
+	 * Prints a compact box of indicators useful while a test is running: whether interactions are
+	 * still arriving, how many turns complete, how much of the traffic Guardrails actually covered,
+	 * and the block rate on only the turns it covered (a different, usually higher, share than the
+	 * one in the indicators table below, which is taken of all turns).
+	 *
+	 * @param array<string, mixed> $report Report of the period.
+	 * @param DateTimeZone         $zone   Site time zone.
+	 * @return void
+	 */
+	private function render_test_status( array $report, DateTimeZone $zone ): void {
+		?>
+		<h2><?php esc_html_e( 'Test status', 'rag-interaction-logger-monitor' ); ?></h2>
+		<div class="rilm-tiles">
+			<div class="rilm-tile">
+				<p class="rilm-tile-label"><?php esc_html_e( 'Last interaction recorded', 'rag-interaction-logger-monitor' ); ?></p>
+				<p class="rilm-tile-value"><?php echo esc_html( self::last_interaction_text( $report['last_ts'], $zone ) ); ?></p>
+			</div>
+			<div class="rilm-tile">
+				<p class="rilm-tile-label"><?php esc_html_e( 'Completed turns', 'rag-interaction-logger-monitor' ); ?></p>
+				<p class="rilm-tile-value"><?php echo esc_html( number_format_i18n( $report['duration']['completed'] ) ); ?></p>
+				<p class="description">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: %s: share of all turns that are incomplete. */
+							__( '%s incomplete', 'rag-interaction-logger-monitor' ),
+							self::percent_text( $report['outcomes']['incomplete']['percent'] )
+						)
+					);
+					?>
+				</p>
+			</div>
+			<div class="rilm-tile">
+				<p class="rilm-tile-label"><?php esc_html_e( 'Guardrails coverage', 'rag-interaction-logger-monitor' ); ?></p>
+				<p class="rilm-tile-value"><?php echo esc_html( self::percent_text( $report['guardrails_covered']['percent'] ) ); ?></p>
+				<p class="description">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: 1: number of turns Guardrails covered, 2: total number of turns. */
+							__( '%1$s of %2$s turns', 'rag-interaction-logger-monitor' ),
+							number_format_i18n( $report['guardrails_covered']['count'] ),
+							number_format_i18n( $report['total'] )
+						)
+					);
+					?>
+				</p>
+			</div>
+			<div class="rilm-tile">
+				<p class="rilm-tile-label"><?php esc_html_e( 'Blocks on turns Guardrails covered', 'rag-interaction-logger-monitor' ); ?></p>
+				<p class="rilm-tile-value-small">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: %s: share of the covered turns whose input was blocked. */
+							__( 'Input: %s', 'rag-interaction-logger-monitor' ),
+							self::percent_text( $report['input_blocks']['percent_of_covered'] )
+						)
+					);
+					?>
+				</p>
+				<p class="rilm-tile-value-small">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: %s: share of the covered turns whose output was blocked. */
+							__( 'Output: %s', 'rag-interaction-logger-monitor' ),
+							self::percent_text( $report['output_blocks']['percent_of_covered'] )
+						)
+					);
+					?>
+				</p>
+			</div>
+			<?php if ( isset( $report['tools'] ) ) : ?>
+			<div class="rilm-tile">
+				<p class="rilm-tile-label"><?php echo esc_html( Indicator_Texts::label( Indicator_Texts::TOOLS ) ); ?></p>
+				<p class="rilm-tile-value"><?php echo esc_html( self::percent_text( $report['tools']['percent'] ) ); ?></p>
+				<p class="description">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: 1: number of turns that used a tool, 2: total number of turns. */
+							__( '%1$s of %2$s turns', 'rag-interaction-logger-monitor' ),
+							number_format_i18n( $report['tools']['count'] ),
+							number_format_i18n( $report['total'] )
+						)
+					);
+					?>
+				</p>
+			</div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Formats the last interaction of the period in the site time zone, or "Not recorded".
+	 *
+	 * @param string|null  $last_ts Stored UTC timestamp (`Y-m-d H:i:s.v`), or null when the period is empty.
+	 * @param DateTimeZone $zone    Site time zone.
+	 * @return string
+	 */
+	private static function last_interaction_text( ?string $last_ts, DateTimeZone $zone ): string {
+		if ( null === $last_ts ) {
+			return __( 'Not recorded', 'rag-interaction-logger-monitor' );
+		}
+
+		return ( new DateTimeImmutable( $last_ts, new DateTimeZone( 'UTC' ) ) )->setTimezone( $zone )->format( 'Y-m-d H:i:s' );
 	}
 
 	/**

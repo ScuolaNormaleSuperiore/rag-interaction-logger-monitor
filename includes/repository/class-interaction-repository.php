@@ -281,7 +281,7 @@ class Interaction_Repository {
 	 * Returns, in one query, the figures of the dashboard for a period.
 	 *
 	 * @param Period $period Period to summarise.
-	 * @return array{total: int, generated: int, fast_reply: int, incomplete: int, no_guardrails: int, input_blocks: int, output_blocks: int, zero_recall: int, completed: int, average_ms: float|null, tools?: int}|null Null when the query failed; `tools` is present only when the table has `tools_used`.
+	 * @return array{total: int, generated: int, fast_reply: int, incomplete: int, no_guardrails: int, input_blocks: int, output_blocks: int, zero_recall: int, completed: int, average_ms: float|null, last_ts: string|null, tools?: int}|null Null when the query failed; `tools` is present only when the table has `tools_used`.
 	 */
 	public function summary( Period $period ): ?array {
 		$completed   = 'CASE WHEN ' . self::COMPLETED . ' THEN 1 ELSE 0 END';
@@ -296,6 +296,7 @@ class Interaction_Repository {
 			array(
 				'completed'  => 'SUM( ' . $completed . ' )',
 				'average_ms' => 'AVG( CASE WHEN ' . self::COMPLETED . ' THEN duration_ms END )',
+				'last_ts'    => 'MAX( ts )',
 			),
 			$period
 		);
@@ -312,6 +313,7 @@ class Interaction_Repository {
 
 		$summary['completed']  = (int) ( $row['completed'] ?? 0 );
 		$summary['average_ms'] = isset( $row['average_ms'] ) ? (float) $row['average_ms'] : null;
+		$summary['last_ts']    = isset( $row['last_ts'] ) && is_string( $row['last_ts'] ) && '' !== $row['last_ts'] ? $row['last_ts'] : null;
 
 		return $summary;
 	}

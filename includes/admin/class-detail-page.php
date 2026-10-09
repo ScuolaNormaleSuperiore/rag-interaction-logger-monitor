@@ -326,20 +326,25 @@ class Detail_Page {
 	 * document's metadata an optional type, origin, WordPress id, title and URL
 	 * (for example from the WordPress importer). Older logger versions may have
 	 * stored another representation, which remains visible as escaped plain text
-	 * instead of being discarded.
+	 * instead of being discarded. A note always precedes the list: recall is not
+	 * proof that a source was cited or used in the delivered answer, since the
+	 * plugin never reads the LLM's text to check.
 	 *
 	 * @param string $sources Stored recall sources.
 	 * @return void
 	 */
 	private function render_recall_sources( string $sources ): void {
+		printf( '<h2>%s</h2>', esc_html__( 'Recall sources', 'rag-interaction-logger-monitor' ) );
+		echo '<p class="description">' . esc_html__( 'These are the sources the system recalled; they do not necessarily prove that they were cited or used in the delivered answer.', 'rag-interaction-logger-monitor' ) . '</p>';
+
 		$items = json_decode( $sources, true );
 
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $items ) || ! array_is_list( $items ) ) {
-			$this->render_optional_text( __( 'Recall sources', 'rag-interaction-logger-monitor' ), $sources );
+			echo '<div class="rilm-text rilm-full-text">' . esc_html( $sources ) . '</div>';
 			return;
 		}
 
-		printf( '<h2>%s</h2><ul class="rilm-recall-sources">', esc_html__( 'Recall sources', 'rag-interaction-logger-monitor' ) );
+		echo '<ul class="rilm-recall-sources">';
 
 		foreach ( $items as $item ) {
 			if ( ! is_array( $item ) ) {
@@ -459,21 +464,6 @@ class Detail_Page {
 			&& isset( $parts['scheme'], $parts['host'] )
 			&& is_string( $parts['scheme'] )
 			&& in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true );
-	}
-
-	/**
-	 * Prints an optional column as escaped plain text.
-	 *
-	 * @param string $title Section title.
-	 * @param string $text  Column value.
-	 * @return void
-	 */
-	private function render_optional_text( string $title, string $text ): void {
-		printf(
-			'<h2>%1$s</h2><div class="rilm-text rilm-full-text">%2$s</div>',
-			esc_html( $title ),
-			esc_html( $text )
-		);
 	}
 
 	/**

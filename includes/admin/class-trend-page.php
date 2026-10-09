@@ -273,7 +273,7 @@ class Trend_Page {
 			?>
 		</div>
 		<p class="description"><?php esc_html_e( 'A turn blocked on both input and output counts in both series of the third chart.', 'rag-interaction-logger-monitor' ); ?></p>
-		<details class="rilm-details">
+		<details class="rilm-details" open>
 			<summary><?php echo esc_html( $texts['show_table'] ); ?></summary>
 			<table class="widefat striped rilm-daily-table">
 				<thead>
@@ -286,29 +286,48 @@ class Trend_Page {
 						<?php if ( isset( $report['tools'] ) ) : ?>
 							<th scope="col"><?php esc_html_e( 'Turns that used tools', 'rag-interaction-logger-monitor' ); ?></th>
 						<?php endif; ?>
+						<th scope="col"><?php esc_html_e( '% incomplete', 'rag-interaction-logger-monitor' ); ?></th>
+						<th scope="col"><?php esc_html_e( '% input blocked', 'rag-interaction-logger-monitor' ); ?></th>
+						<th scope="col"><?php esc_html_e( '% output blocked', 'rag-interaction-logger-monitor' ); ?></th>
+						<?php if ( isset( $report['tools'] ) ) : ?>
+							<th scope="col"><?php esc_html_e( '% used a tool', 'rag-interaction-logger-monitor' ); ?></th>
+						<?php endif; ?>
 					</tr>
 				</thead>
 				<tbody>
 					<?php
+					// Each percentage is of the turns of its own row, not of the whole period; a row with
+					// no turns shows a dash instead of dividing by zero.
 					foreach ( $days as $day ) {
+						$percent_incomplete = esc_html( Dashboard_Page::percent_text( Dashboard_Report::percent( $day['incomplete'], $day['turns'] ) ) );
+						$percent_input      = esc_html( Dashboard_Page::percent_text( Dashboard_Report::percent( $day['input_blocks'], $day['turns'] ) ) );
+						$percent_output     = esc_html( Dashboard_Page::percent_text( Dashboard_Report::percent( $day['output_blocks'], $day['turns'] ) ) );
+
 						if ( isset( $report['tools'] ) ) {
 							printf(
-								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td><td>%6$s</td></tr>',
+								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td><td>%6$s</td><td>%7$s</td><td>%8$s</td><td>%9$s</td><td>%10$s</td></tr>',
 								esc_html( $day['date'] ),
 								esc_html( number_format_i18n( $day['turns'] ) ),
 								esc_html( number_format_i18n( $day['incomplete'] ) ),
 								esc_html( number_format_i18n( $day['input_blocks'] ) ),
 								esc_html( number_format_i18n( $day['output_blocks'] ) ),
-								esc_html( number_format_i18n( $day['tools'] ) )
+								esc_html( number_format_i18n( $day['tools'] ) ),
+								$percent_incomplete, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped above.
+								$percent_input, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped above.
+								$percent_output, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped above.
+								esc_html( Dashboard_Page::percent_text( Dashboard_Report::percent( $day['tools'], $day['turns'] ) ) )
 							);
 						} else {
 							printf(
-								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td></tr>',
+								'<tr><th scope="row">%1$s</th><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td><td>%6$s</td><td>%7$s</td><td>%8$s</td></tr>',
 								esc_html( $day['date'] ),
 								esc_html( number_format_i18n( $day['turns'] ) ),
 								esc_html( number_format_i18n( $day['incomplete'] ) ),
 								esc_html( number_format_i18n( $day['input_blocks'] ) ),
-								esc_html( number_format_i18n( $day['output_blocks'] ) )
+								esc_html( number_format_i18n( $day['output_blocks'] ) ),
+								$percent_incomplete, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped above.
+								$percent_input, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped above.
+								$percent_output // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped above.
 							);
 						}
 					}

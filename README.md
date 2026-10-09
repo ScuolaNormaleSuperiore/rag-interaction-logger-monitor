@@ -6,10 +6,10 @@ Requires WordPress 7.1+ and PHP 8.3+ (with the `sodium` extension), and a MySQL 
 
 ## Features
 
-- **Dashboard** – turns, durations, indicators (generated, fast reply, incomplete, blocks, Guardrails, recall, tools), the use of each tool or form, and blocks by verdict, with a collapsible legend.
-- **Daily trend** – the same figures charted over time: one bar per day up to a month, per week up to about six months, and per month beyond that, so a chart never has to draw too many bars.
+- **Dashboard** – turns, durations, indicators (generated, fast reply, incomplete, blocks, Guardrails, recall, tools), the use of each tool or form, and blocks by verdict, with a collapsible legend; a "Test status" box shows the last interaction recorded, completed turns and incompleteness, Guardrails coverage, the block rate on only the turns Guardrails covered, and the tool-invocation rate when available.
+- **Daily trend** – the same figures charted over time: one bar per day up to a month, per week up to about six months, and per month beyond that, so a chart never has to draw too many bars. Its table, open by default, also shows each count as a percentage of that row's own turns.
 - **Interactions** – a paginated list with filters and a text search; the search text travels in a POST body, never in a URL.
-- **Detail** – every field of one interaction, with a comparison of the generated and delivered answers.
+- **Detail** – every field of one interaction, with a comparison of the generated and delivered answers; recalled sources, always shown, include a caution note and, when the logger records them, a document's title, a link opening in a new tab, origin, WordPress ID and type.
 - **Anomalies** – predefined views, each linking to the filtered list.
 - **Settings** – the connection to the log database.
 

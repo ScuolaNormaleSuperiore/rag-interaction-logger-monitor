@@ -82,6 +82,7 @@ class DashboardPageTest extends WP_UnitTestCase {
 					'zero_recall'   => '15',
 					'completed'     => '178',
 					'average_ms'    => '1234.5000',
+					'last_ts'       => '2026-10-02 09:30:00.000',
 				),
 			),
 			array(
@@ -203,6 +204,82 @@ class DashboardPageTest extends WP_UnitTestCase {
 		$this->assertMatchesRegularExpression( '/Average duration of completed turns<\/p>\s*<p class="rilm-tile-value">1,235 ms/', $output );
 		$this->assertMatchesRegularExpression( '/Median duration of completed turns<\/p>\s*<p class="rilm-tile-value">1,000 ms/', $output );
 		$this->assertStringContainsString( 'Completed turns: 178.', $output );
+	}
+
+	/**
+	 * The test-status box shows the last interaction, completed turns, Guardrails coverage and the
+	 * block rate on only the turns Guardrails covered (not the same share as the indicators table,
+	 * which is taken of all turns).
+	 *
+	 * @return void
+	 */
+	public function test_shows_the_test_status_box(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringContainsString( '<h2>Test status</h2>', $output );
+		$this->assertMatchesRegularExpression( '/Last interaction recorded<\/p>\s*<p class="rilm-tile-value">2026-10-02 11:30:00/', $output );
+		$this->assertMatchesRegularExpression( '/Completed turns<\/p>\s*<p class="rilm-tile-value">178/', $output );
+		$this->assertStringContainsString( '10.0% incomplete', $output );
+		$this->assertMatchesRegularExpression( '/Guardrails coverage<\/p>\s*<p class="rilm-tile-value">95.0%/', $output );
+		$this->assertStringContainsString( '190 of 200 turns', $output );
+		$this->assertStringContainsString( 'Input: 4.2%', $output );
+		$this->assertStringContainsString( 'Output: 2.1%', $output );
+	}
+
+	/**
+	 * Without a recorded interaction in the period, the box says so instead of a stale or blank date.
+	 *
+	 * @return void
+	 */
+	public function test_test_status_shows_not_recorded_without_an_interaction(): void {
+		$this->load(
+			array(
+				'total'         => '0',
+				'generated'     => null,
+				'fast_reply'    => null,
+				'incomplete'    => null,
+				'no_guardrails' => null,
+				'input_blocks'  => null,
+				'output_blocks' => null,
+				'zero_recall'   => null,
+				'completed'     => null,
+				'average_ms'    => null,
+				'last_ts'       => null,
+			)
+		);
+
+		$output = $this->render( $this->page() );
+
+		$this->assertMatchesRegularExpression( '/Last interaction recorded<\/p>\s*<p class="rilm-tile-value">Not recorded/', $output );
+	}
+
+	/**
+	 * With the optional tools column, the box adds the share of turns that used a tool.
+	 *
+	 * @return void
+	 */
+	public function test_test_status_shows_the_tool_rate_with_the_column(): void {
+		$this->load_with_tools();
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertMatchesRegularExpression( '/Turns that used tools<\/p>\s*<p class="rilm-tile-value">25.0%/', $output );
+		$this->assertStringContainsString( '50 of 200 turns', $output );
+	}
+
+	/**
+	 * Without the tools column, the box has no tool-rate tile.
+	 *
+	 * @return void
+	 */
+	public function test_test_status_has_no_tool_rate_without_the_column(): void {
+		$this->load();
+
+		$output = $this->render( $this->page() );
+
+		$this->assertStringNotContainsString( 'Turns that used tools', $output );
 	}
 
 	/**

@@ -62,30 +62,36 @@ class Dashboard_Report {
 			return null;
 		}
 
-		$total = $summary['total'];
+		$total   = $summary['total'];
+		$covered = $total - $summary['no_guardrails'];
 
 		$report = array(
-			'total'         => $total,
-			'outcomes'      => array(
+			'total'              => $total,
+			'last_ts'            => $summary['last_ts'],
+			'outcomes'           => array(
 				'generated'  => $this->share( $summary['generated'], $total ),
 				'fast_reply' => $this->share( $summary['fast_reply'], $total ),
 				'incomplete' => $this->share( $summary['incomplete'], $total ),
 			),
-			'no_guardrails' => $this->share( $summary['no_guardrails'], $total ),
-			'input_blocks'  => $this->share( $summary['input_blocks'], $total ) + array(
-				'by_verdict' => $with_breakdowns && $summary['input_blocks'] > 0 ? $this->repository->verdict_counts( 'input_verdict', $period ) : array(),
+			'no_guardrails'      => $this->share( $summary['no_guardrails'], $total ),
+			// The turns Guardrails did handle: the complement of 'no_guardrails', since guard_present is 0 or 1.
+			'guardrails_covered' => $this->share( $covered, $total ),
+			'input_blocks'       => $this->share( $summary['input_blocks'], $total ) + array(
+				'by_verdict'         => $with_breakdowns && $summary['input_blocks'] > 0 ? $this->repository->verdict_counts( 'input_verdict', $period ) : array(),
+				'percent_of_covered' => self::percent( $summary['input_blocks'], $covered ),
 			),
-			'output_blocks' => $this->share( $summary['output_blocks'], $total ) + array(
-				'by_verdict' => $with_breakdowns && $summary['output_blocks'] > 0 ? $this->repository->verdict_counts( 'output_verdict', $period ) : array(),
+			'output_blocks'      => $this->share( $summary['output_blocks'], $total ) + array(
+				'by_verdict'         => $with_breakdowns && $summary['output_blocks'] > 0 ? $this->repository->verdict_counts( 'output_verdict', $period ) : array(),
+				'percent_of_covered' => self::percent( $summary['output_blocks'], $covered ),
 			),
 			// Zero recall is a share of the generated answers, the only turns that use recall.
-			'zero_recall'   => $this->share( $summary['zero_recall'], $summary['generated'] ) + array( 'generated' => $summary['generated'] ),
-			'duration'      => array(
+			'zero_recall'        => $this->share( $summary['zero_recall'], $summary['generated'] ) + array( 'generated' => $summary['generated'] ),
+			'duration'           => array(
 				'completed'  => $summary['completed'],
 				'average_ms' => $summary['average_ms'],
 				'median_ms'  => $with_breakdowns ? $this->repository->median_duration( $period, $summary['completed'] ) : null,
 			),
-			'daily'         => array(),
+			'daily'              => array(),
 		);
 
 		// The tools figures exist only when the table has the column.

@@ -619,6 +619,53 @@ class DetailPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A caution note precedes the list: recall is not proof that a source was cited or used.
+	 *
+	 * @return void
+	 */
+	public function test_recall_sources_note_precedes_the_list(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"id":"doc-1","source":"https://example.org/guide","score":0.5}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$heading = strpos( $output, '<h2>Recall sources</h2>' );
+		$note    = strpos( $output, 'These are the sources the system recalled; they do not necessarily prove that they were cited or used in the delivered answer.' );
+		$list    = strpos( $output, '<ul class="rilm-recall-sources">' );
+
+		$this->assertNotFalse( $note );
+		$this->assertTrue( $heading < $note && $note < $list );
+	}
+
+	/**
+	 * The same caution note appears even when the stored value is not logger JSON.
+	 *
+	 * @return void
+	 */
+	public function test_recall_sources_note_appears_for_the_text_fallback(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => 'doc-1, doc-2',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringContainsString( 'These are the sources the system recalled', $output );
+	}
+
+	/**
 	 * Recall sources follow the question and come before the generated answer: that is when, in the
 	 * turn itself, the documents were recalled.
 	 *
