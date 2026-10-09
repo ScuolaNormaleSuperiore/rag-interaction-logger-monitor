@@ -117,16 +117,16 @@ class DashboardQueriesTest extends TestCase {
 
 		$this->assertCount( 1, $this->db->queries );
 		$this->assertSame(
-			'SELECT COUNT(*) AS total'
-			. ", SUM( CASE WHEN outcome = 'generated' THEN 1 ELSE 0 END ) AS generated"
-			. ", SUM( CASE WHEN outcome = 'fast_reply' THEN 1 ELSE 0 END ) AS fast_reply"
-			. ", SUM( CASE WHEN outcome = 'incomplete' THEN 1 ELSE 0 END ) AS incomplete"
-			. ', SUM( CASE WHEN guard_present = 0 THEN 1 ELSE 0 END ) AS no_guardrails'
-			. ', SUM( CASE WHEN input_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS input_blocks'
-			. ', SUM( CASE WHEN output_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS output_blocks'
-			. ", SUM( CASE WHEN outcome = 'generated' AND recall_count = 0 THEN 1 ELSE 0 END ) AS zero_recall"
-			. ", SUM( CASE WHEN outcome <> 'incomplete' AND duration_ms IS NOT NULL THEN 1 ELSE 0 END ) AS completed"
-			. ", AVG( CASE WHEN outcome <> 'incomplete' AND duration_ms IS NOT NULL THEN duration_ms END ) AS average_ms"
+			'SELECT COUNT(*) AS `total`'
+			. ", SUM( CASE WHEN outcome = 'generated' THEN 1 ELSE 0 END ) AS `generated`"
+			. ", SUM( CASE WHEN outcome = 'fast_reply' THEN 1 ELSE 0 END ) AS `fast_reply`"
+			. ", SUM( CASE WHEN outcome = 'incomplete' THEN 1 ELSE 0 END ) AS `incomplete`"
+			. ', SUM( CASE WHEN guard_present = 0 THEN 1 ELSE 0 END ) AS `no_guardrails`'
+			. ', SUM( CASE WHEN input_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS `input_blocks`'
+			. ', SUM( CASE WHEN output_verdict IS NOT NULL THEN 1 ELSE 0 END ) AS `output_blocks`'
+			. ", SUM( CASE WHEN outcome = 'generated' AND recall_count = 0 THEN 1 ELSE 0 END ) AS `zero_recall`"
+			. ", SUM( CASE WHEN outcome <> 'incomplete' AND duration_ms IS NOT NULL THEN 1 ELSE 0 END ) AS `completed`"
+			. ", AVG( CASE WHEN outcome <> 'incomplete' AND duration_ms IS NOT NULL THEN duration_ms END ) AS `average_ms`"
 			. ' FROM ' . self::TABLE . ' WHERE ' . self::PERIOD,
 			$this->db->queries[0]
 		);

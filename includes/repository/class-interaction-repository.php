@@ -497,18 +497,20 @@ class Interaction_Repository {
 	 * @return array<string, mixed>|null The row, or null when the query failed.
 	 */
 	private function aggregate( array $definitions, array $raw, Period $period ): ?array {
-		$selects = array( 'COUNT(*) AS total' );
+		// The aliases are internal keys, but some (for example `generated`) are
+		// reserved words on supported MySQL/MariaDB versions.
+		$selects = array( 'COUNT(*) AS `total`' );
 		$params  = array();
 
 		foreach ( $definitions as $key => $input ) {
 			list( $clauses, $values ) = $this->conditions( Filters::from_array( $input, $period->end() ) );
 
-			$selects[] = 'SUM( CASE WHEN ' . implode( ' AND ', $clauses ) . ' THEN 1 ELSE 0 END ) AS ' . $key;
+			$selects[] = 'SUM( CASE WHEN ' . implode( ' AND ', $clauses ) . ' THEN 1 ELSE 0 END ) AS `' . $key . '`';
 			$params    = array_merge( $params, $values );
 		}
 
 		foreach ( $raw as $key => $expression ) {
-			$selects[] = $expression . ' AS ' . $key;
+			$selects[] = $expression . ' AS `' . $key . '`';
 		}
 
 		$params[] = $period->start_utc();

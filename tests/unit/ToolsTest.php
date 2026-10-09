@@ -426,7 +426,7 @@ class ToolsTest extends TestCase {
 		$counting = $this->db->queries[0];
 
 		foreach ( Anomalies::definitions( array( 'tools_used' ) ) as $key => $input ) {
-			$this->assertStringContainsString( 'SUM( CASE WHEN ' . $this->condition_of( $repository, $input ) . ' THEN 1 ELSE 0 END ) AS ' . $key, $counting, $key );
+			$this->assertStringContainsString( 'SUM( CASE WHEN ' . $this->condition_of( $repository, $input ) . ' THEN 1 ELSE 0 END ) AS `' . $key . '`', $counting, $key );
 		}
 
 		$this->assertCount( 9, Anomalies::definitions( array( 'tools_used' ) ) );
@@ -466,7 +466,7 @@ class ToolsTest extends TestCase {
 		$summary = $this->repository()->summary( self::period() );
 
 		$this->assertCount( 1, $this->db->queries );
-		$this->assertStringContainsString( 'SUM( CASE WHEN ' . self::USED . ' THEN 1 ELSE 0 END ) AS tools', $this->db->queries[0] );
+		$this->assertStringContainsString( 'SUM( CASE WHEN ' . self::USED . ' THEN 1 ELSE 0 END ) AS `tools`', $this->db->queries[0] );
 		$this->assertSame( 4, $summary['tools'] );
 
 		$this->db->queries = array();

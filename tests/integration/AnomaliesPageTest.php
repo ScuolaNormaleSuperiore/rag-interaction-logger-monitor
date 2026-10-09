@@ -242,7 +242,7 @@ class AnomaliesPageTest extends WP_UnitTestCase {
 		$this->render( $this->page() );
 
 		$this->assertCount( 1, $this->reader->queries );
-		$this->assertStringStartsWith( 'SELECT COUNT(*) AS total', $this->reader->queries[0] );
+		$this->assertStringStartsWith( 'SELECT COUNT(*) AS `total`', $this->reader->queries[0] );
 	}
 
 	/**
