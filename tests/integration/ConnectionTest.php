@@ -150,6 +150,16 @@ class ConnectionTest extends WP_UnitTestCase {
 			'select word prefix'   => array( 'SELECTED_ROWS', false ),
 			'comment before'       => array( '/* x */ DELETE FROM t', false ),
 			'empty'                => array( '', false ),
+			'stacked statement'    => array( 'SELECT 1; DROP TABLE t', false ),
+			'trailing semicolon'   => array( 'SELECT 1;', false ),
+			'into outfile'         => array( "SELECT a FROM t INTO OUTFILE '/tmp/x'", false ),
+			'into dumpfile'        => array( "SELECT a FROM t into\n dumpfile '/tmp/x'", false ),
+			'unbalanced quote'     => array( "SELECT 'a FROM t", false ),
+			'quoted semicolon'     => array( "SELECT a FROM t WHERE q LIKE '%a; DROP TABLE t%'", true ),
+			'quoted into outfile'  => array( "SELECT a FROM t WHERE q LIKE '%into outfile%'", true ),
+			'escaped quote'        => array( "SELECT a FROM t WHERE q = 'it\\'s; ok'", true ),
+			'doubled quote'        => array( "SELECT a FROM t WHERE q = 'it''s; ok'", true ),
+			'quoted identifier'    => array( 'SELECT `a;b` FROM `t`', true ),
 		);
 	}
 

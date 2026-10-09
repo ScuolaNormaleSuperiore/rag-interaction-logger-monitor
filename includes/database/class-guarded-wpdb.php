@@ -45,13 +45,29 @@ class Guarded_Wpdb extends \wpdb implements Reader {
 	}
 
 	/**
-	 * Tells whether a statement is a plain `SELECT`.
+	 * Tells whether a statement is a single plain `SELECT` that writes nothing.
+	 *
+	 * Quoted values and identifiers are blanked first, so a search text that
+	 * contains `;` or `INTO OUTFILE` (quoted by `prepare()`) is still accepted,
+	 * while the same text outside quotes is refused.
 	 *
 	 * @param mixed $query SQL statement.
 	 * @return bool
 	 */
 	public static function is_read_only_query( $query ): bool {
-		return is_string( $query ) && 1 === preg_match( '/^\s*SELECT\b/i', $query );
+		if ( ! is_string( $query ) || 1 !== preg_match( '/^\s*SELECT\b/i', $query ) ) {
+			return false;
+		}
+
+		$unquoted = preg_replace( '/\'(?:[^\'\\\\]|\\\\.|\'\')*\'|"(?:[^"\\\\]|\\\\.|"")*"|`(?:[^`]|``)*`/s', ' 0 ', $query );
+
+		// An unbalanced quote leaves the statement ambiguous: refuse it.
+		if ( null === $unquoted || 1 === preg_match( '/[\'"`]/', $unquoted ) ) {
+			return false;
+		}
+
+		return false === strpos( $unquoted, ';' )
+			&& 0 === preg_match( '/\bINTO\s+(?:OUTFILE|DUMPFILE)\b/i', $unquoted );
 	}
 
 	/**
