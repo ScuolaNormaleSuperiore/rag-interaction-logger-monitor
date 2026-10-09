@@ -207,6 +207,20 @@
 	border: 1px solid #c3c4c7;
 }
 
+/* Detail page: recalled documents listed in the same kind of box as the full texts. */
+.rilm-wrap .rilm-recall-sources {
+	max-width: 100%;
+	margin: 0;
+	padding: 10px 14px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	list-style: none;
+}
+
+.rilm-wrap .rilm-recall-sources li + li {
+	margin-top: 8px;
+}
+
 .rilm-wrap .rilm-full-text + .rilm-details,
 .rilm-wrap .rilm-details + .rilm-details {
 	margin-top: 8px;

@@ -583,7 +583,7 @@ class DetailPageTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '>Tools used<', $output );
 		$this->assertStringContainsString( '>Tool input<', $output );
 		$this->assertStringContainsString( '>Tool output<', $output );
-		$this->assertStringContainsString( '<summary>Recall sources</summary>', $output );
+		$this->assertStringContainsString( '<h2>Recall sources</h2>', $output );
 		$this->assertStringContainsString( '>Not recorded<', $output );
 		$this->assertStringContainsString( '{&quot;q&quot;:&quot;&lt;b&gt;x&lt;/b&gt;&quot;}', $output );
 		$this->assertStringNotContainsString( '<b>x</b>', $output );
@@ -613,9 +613,38 @@ class DetailPageTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'target="_blank" rel="noopener noreferrer"', $output );
 		$this->assertStringContainsString( '>https://example.org/guide?a=1&amp;b=2</a>', $output );
 		$this->assertStringContainsString( '<strong>ID:</strong> doc-2 guide.pdf', $output );
-		$this->assertStringContainsString( 'Score: 0.875000', $output );
-		$this->assertStringContainsString( 'Score: 0.500000', $output );
+		$this->assertStringContainsString( 'Score: <strong>0.875000</strong>', $output );
+		$this->assertStringContainsString( 'Score: <strong>0.500000</strong>', $output );
 		$this->assertStringNotContainsString( 'href="guide.pdf"', $output );
+	}
+
+	/**
+	 * Recall sources follow the question and come before the generated answer: that is when, in the
+	 * turn itself, the documents were recalled.
+	 *
+	 * @return void
+	 */
+	public function test_recall_sources_follow_the_question(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"id":"doc-1","source":"https://example.org/guide","score":0.5}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$question  = strpos( $output, '<h2>Question</h2>' );
+		$sources   = strpos( $output, '<h2>Recall sources</h2>' );
+		$generated = strpos( $output, '<h2>Generated answer</h2>' );
+
+		$this->assertNotFalse( $question );
+		$this->assertNotFalse( $sources );
+		$this->assertNotFalse( $generated );
+		$this->assertTrue( $question < $sources && $sources < $generated );
 	}
 
 	/**
@@ -663,6 +692,128 @@ class DetailPageTest extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'href="file:///private/guide.pdf"', $output );
 		$this->assertStringContainsString( 'javascript:alert(1)', $output );
 		$this->assertStringContainsString( 'file:///private/guide.pdf', $output );
+	}
+
+	/**
+	 * A document with a title links the title to its `url`, with origin, WordPress id, type and
+	 * score as secondary text, and no raw `ID:` line (the title is the name shown instead).
+	 *
+	 * @return void
+	 */
+	public function test_recall_source_with_title_links_the_title_to_its_url(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"id":"7e3d2adae3b54b4ba3334cece921cde1","source":"user","type":"Document","origin":"WordPress","wp_id":"414","url":"https://example.org/services/wifi","title":"WiFi SNS","score":0.89005}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringNotContainsString( '<strong>ID:</strong>', $output );
+		$this->assertStringContainsString( 'href="https://example.org/services/wifi"', $output );
+		$this->assertStringContainsString( 'target="_blank" rel="noopener noreferrer">WiFi SNS</a>', $output );
+		$this->assertStringContainsString( 'Origin: WordPress', $output );
+		$this->assertStringContainsString( 'WordPress ID: 414', $output );
+		$this->assertStringContainsString( 'Type: Document', $output );
+		$this->assertStringContainsString( 'Score: <strong>0.890050</strong>', $output );
+		$this->assertStringNotContainsString( '>user<', $output );
+	}
+
+	/**
+	 * A `url` cut to its length limit is shown as text, never as a link, because it no longer
+	 * points to the real page.
+	 *
+	 * @return void
+	 */
+	public function test_cut_recall_source_url_is_not_linked(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"title":"Long page","url":"https://example.org/cut","url_cut":true}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringNotContainsString( 'href="https://example.org/cut"', $output );
+		$this->assertStringContainsString( 'Long page', $output );
+	}
+
+	/**
+	 * Without a title, the name shown is the source, but the link still prefers `url` over `source`.
+	 *
+	 * @return void
+	 */
+	public function test_recall_source_without_a_title_still_prefers_the_url_link(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"id":"doc-9","source":"user","url":"https://example.org/page","score":0.7}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringContainsString( '<strong>ID:</strong> doc-9', $output );
+		$this->assertStringContainsString( 'href="https://example.org/page"', $output );
+		$this->assertStringContainsString( '>user</a>', $output );
+	}
+
+	/**
+	 * A document with only an id and a type shows the `ID:` line and the type, nothing else, and
+	 * never warns about the fields it does not have.
+	 *
+	 * @return void
+	 */
+	public function test_recall_source_with_only_id_and_type(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"id":"doc-42","type":"Document"}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringContainsString( '<strong>ID:</strong> doc-42', $output );
+		$this->assertStringContainsString( 'Type: Document', $output );
+	}
+
+	/**
+	 * Fields of the wrong type (an object for `origin`, a boolean for `wp_id`) are skipped,
+	 * not shown and not warned about.
+	 *
+	 * @return void
+	 */
+	public function test_recall_source_ignores_malformed_fields(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'recall_sources' => '[{"id":"doc-7","origin":{"nested":true},"wp_id":true,"title":"Fine title"}]',
+					)
+				)
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'recall_sources' ) ) );
+
+		$this->assertStringContainsString( 'Fine title', $output );
+		$this->assertStringNotContainsString( 'Origin:', $output );
+		$this->assertStringNotContainsString( 'WordPress ID:', $output );
 	}
 
 	/**

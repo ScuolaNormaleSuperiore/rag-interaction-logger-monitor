@@ -136,11 +136,17 @@ class Detail_Page {
 		$this->render_metadata( $interaction, $zone );
 
 		$this->render_text( __( 'Question', 'rag-interaction-logger-monitor' ), $interaction->question );
+
+		// Recall happens as the question is processed, before the answer is generated.
+		if ( null !== $interaction->recall_sources ) {
+			$this->render_recall_sources( $interaction->recall_sources );
+		}
+
 		$this->render_text( __( 'Generated answer', 'rag-interaction-logger-monitor' ), $interaction->llm_answer );
 		$this->render_text( __( 'Delivered answer', 'rag-interaction-logger-monitor' ), $interaction->delivered );
 
 		$this->render_comparison( $interaction );
-		$this->render_optional_columns( $interaction );
+		$this->render_tool_invocation( $interaction );
 	}
 
 	/**
@@ -261,20 +267,6 @@ class Detail_Page {
 	}
 
 	/**
-	 * Prints fields from columns added to the table later.
-	 *
-	 * @param Interaction $interaction Interaction to show.
-	 * @return void
-	 */
-	private function render_optional_columns( Interaction $interaction ): void {
-		$this->render_tool_invocation( $interaction );
-
-		if ( null !== $interaction->recall_sources ) {
-			$this->render_recall_sources( $interaction->recall_sources );
-		}
-	}
-
-	/**
 	 * Prints all recorded information about tool invocations in one section.
 	 *
 	 * The logger stores these fields at interaction level. When more than one tool
@@ -329,10 +321,12 @@ class Detail_Page {
 	/**
 	 * Prints recalled-document metadata, linking only safe web sources.
 	 *
-	 * Current versions of RAG Interaction Logger store this field as a JSON array
-	 * containing an id, a source (file name or URL), and a score. Older logger
-	 * versions may have stored another representation, which remains visible as
-	 * escaped plain text instead of being discarded.
+	 * Current versions of RAG Interaction Logger store this field as a JSON array;
+	 * per document, an id, a source (file name or URL), a score, and from the
+	 * document's metadata an optional type, origin, WordPress id, title and URL
+	 * (for example from the WordPress importer). Older logger versions may have
+	 * stored another representation, which remains visible as escaped plain text
+	 * instead of being discarded.
 	 *
 	 * @param string $sources Stored recall sources.
 	 * @return void
@@ -345,10 +339,7 @@ class Detail_Page {
 			return;
 		}
 
-		printf(
-			'<details class="rilm-details"><summary>%s</summary><ul class="rilm-recall-sources">',
-			esc_html__( 'Recall sources', 'rag-interaction-logger-monitor' )
-		);
+		printf( '<h2>%s</h2><ul class="rilm-recall-sources">', esc_html__( 'Recall sources', 'rag-interaction-logger-monitor' ) );
 
 		foreach ( $items as $item ) {
 			if ( ! is_array( $item ) ) {
@@ -358,11 +349,18 @@ class Detail_Page {
 			$this->render_recall_source( $item );
 		}
 
-		echo '</ul></details>';
+		echo '</ul>';
 	}
 
 	/**
 	 * Prints one recalled document.
+	 *
+	 * The document's name is its title when the logger recorded one, else its source,
+	 * else nothing more than the `ID:` line already shows. That name links to the
+	 * document's `url` when the logger recorded one and it is an absolute `http`/`https`
+	 * URL that was not cut to its length limit; without a usable `url`, a `source` that
+	 * is itself a web URL is linked instead, exactly as it always has been, so a row
+	 * written before the logger recorded `url` still renders the same way.
 	 *
 	 * @param array<string, mixed> $item Recalled-document metadata.
 	 * @return void
@@ -370,11 +368,22 @@ class Detail_Page {
 	private function render_recall_source( array $item ): void {
 		$id     = isset( $item['id'] ) && is_scalar( $item['id'] ) ? (string) $item['id'] : '';
 		$source = isset( $item['source'] ) && is_string( $item['source'] ) ? $item['source'] : '';
+		$title  = isset( $item['title'] ) && is_string( $item['title'] ) ? $item['title'] : '';
+		$url    = isset( $item['url'] ) && is_string( $item['url'] ) ? $item['url'] : '';
 		$score  = isset( $item['score'] ) && is_numeric( $item['score'] ) ? (float) $item['score'] : null;
+
+		$name = '' !== $title ? $title : $source;
+		$link = '';
+
+		if ( '' !== $url && empty( $item['url_cut'] ) && $this->is_web_url( $url ) ) {
+			$link = $url;
+		} elseif ( '' === $title && '' !== $source && $this->is_web_url( $source ) ) {
+			$link = $source;
+		}
 
 		echo '<li>';
 
-		if ( '' !== $id ) {
+		if ( '' === $title && '' !== $id ) {
 			printf(
 				'<strong>%1$s:</strong> %2$s ',
 				esc_html__( 'ID', 'rag-interaction-logger-monitor' ),
@@ -382,27 +391,59 @@ class Detail_Page {
 			);
 		}
 
-		if ( '' !== $source ) {
-			if ( $this->is_web_url( $source ) ) {
+		if ( '' !== $name ) {
+			if ( '' !== $link ) {
 				printf(
 					'<a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a> ',
-					esc_url( $source ),
-					esc_html( $source )
+					esc_url( $link ),
+					esc_html( $name )
 				);
 			} else {
-				echo esc_html( $source ) . ' ';
+				echo esc_html( $name ) . ' ';
+			}
+		}
+
+		$secondary = array();
+
+		foreach (
+			array(
+				'origin' => __( 'Origin', 'rag-interaction-logger-monitor' ),
+				'wp_id'  => __( 'WordPress ID', 'rag-interaction-logger-monitor' ),
+				'type'   => __( 'Type', 'rag-interaction-logger-monitor' ),
+			) as $key => $label
+		) {
+			$value = $this->recall_label( $item, $key );
+
+			if ( '' !== $value ) {
+				$secondary[] = esc_html( $label ) . ': ' . esc_html( $value );
 			}
 		}
 
 		if ( null !== $score ) {
-			printf(
-				'<span class="description">%1$s: %2$s</span>',
-				esc_html__( 'Score', 'rag-interaction-logger-monitor' ),
-				esc_html( number_format_i18n( $score, 6 ) )
-			);
+			$secondary[] = esc_html__( 'Score', 'rag-interaction-logger-monitor' ) . ': <strong>' . esc_html( number_format_i18n( $score, 6 ) ) . '</strong>';
+		}
+
+		if ( array() !== $secondary ) {
+			// Each piece of $secondary is already escaped where it was built, above.
+			printf( '<span class="description">%s</span>', implode( ' &middot; ', $secondary ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 
 		echo '</li>';
+	}
+
+	/**
+	 * Reads a short identifying field (origin, WordPress id, type) from recalled-document metadata.
+	 *
+	 * @param array<string, mixed> $item Recalled-document metadata.
+	 * @param string               $key  Field name.
+	 * @return string Empty when absent, empty, or not text or a number.
+	 */
+	private function recall_label( array $item, string $key ): string {
+		if ( ! isset( $item[ $key ] ) || is_bool( $item[ $key ] ) || ! is_scalar( $item[ $key ] ) ) {
+			return '';
+		}
+
+		return (string) $item[ $key ];
 	}
 
 	/**
@@ -429,7 +470,7 @@ class Detail_Page {
 	 */
 	private function render_optional_text( string $title, string $text ): void {
 		printf(
-			'<details class="rilm-details"><summary>%1$s</summary><div class="rilm-text rilm-full-text">%2$s</div></details>',
+			'<h2>%1$s</h2><div class="rilm-text rilm-full-text">%2$s</div>',
 			esc_html( $title ),
 			esc_html( $text )
 		);
