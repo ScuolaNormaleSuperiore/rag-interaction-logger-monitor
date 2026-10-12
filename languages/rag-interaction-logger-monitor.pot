@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T23:59:13+02:00\n"
+"POT-Creation-Date: 2026-10-12T12:05:39+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: rag-interaction-logger-monitor\n"
@@ -55,13 +55,13 @@ msgstr ""
 #: includes/admin/class-dashboard-page.php:111
 #: includes/admin/class-detail-page.php:79
 #: includes/admin/class-interactions-page.php:162
-#: includes/admin/class-trend-page.php:111
+#: includes/admin/class-trend-page.php:115
 msgid "The interaction log is not available. See the notice above."
 msgstr ""
 
 #: includes/admin/class-anomalies-page.php:186
 #: includes/admin/class-dashboard-page.php:205
-#: includes/admin/class-trend-page.php:173
+#: includes/admin/class-trend-page.php:177
 msgid "Apply period"
 msgstr ""
 
@@ -123,7 +123,7 @@ msgid "Figures are for the chosen period, read in the site time zone: %s."
 msgstr ""
 
 #: includes/admin/class-dashboard-page.php:118
-#: includes/admin/class-trend-page.php:118
+#: includes/admin/class-trend-page.php:122
 msgid "The figures could not be loaded."
 msgstr ""
 
@@ -133,15 +133,15 @@ msgstr ""
 
 #. translators: %s: duration in milliseconds.
 #: includes/admin/class-dashboard-page.php:169
-#: includes/admin/class-detail-page.php:176
+#: includes/admin/class-detail-page.php:177
 #: includes/admin/class-interactions-list-table.php:321
 #, php-format
 msgid "%s ms"
 msgstr ""
 
 #: includes/admin/class-dashboard-page.php:244
-#: includes/admin/class-trend-page.php:217
-#: includes/admin/class-trend-page.php:282
+#: includes/admin/class-trend-page.php:221
+#: includes/admin/class-trend-page.php:286
 msgid "Turns"
 msgstr ""
 
@@ -212,13 +212,14 @@ msgid "Output: %s"
 msgstr ""
 
 #: includes/admin/class-dashboard-page.php:375
-#: includes/admin/class-detail-page.php:173
-#: includes/admin/class-detail-page.php:186
-#: includes/admin/class-detail-page.php:189
-#: includes/admin/class-detail-page.php:217
-#: includes/admin/class-detail-page.php:311
-#: includes/admin/class-detail-page.php:476
-#: includes/admin/class-detail-page.php:516
+#: includes/admin/class-detail-page.php:174
+#: includes/admin/class-detail-page.php:187
+#: includes/admin/class-detail-page.php:190
+#: includes/admin/class-detail-page.php:218
+#: includes/admin/class-detail-page.php:273
+#: includes/admin/class-detail-page.php:361
+#: includes/admin/class-detail-page.php:526
+#: includes/admin/class-detail-page.php:566
 #: includes/admin/class-interactions-list-table.php:468
 #: includes/admin/class-interactions-page.php:414
 msgid "Not recorded"
@@ -310,18 +311,18 @@ msgid "Question"
 msgstr ""
 
 #: includes/admin/class-detail-page.php:145
-#: includes/admin/class-detail-page.php:263
+#: includes/admin/class-detail-page.php:319
 msgid "Generated answer"
 msgstr ""
 
 #: includes/admin/class-detail-page.php:146
-#: includes/admin/class-detail-page.php:264
+#: includes/admin/class-detail-page.php:320
 #: includes/admin/class-interactions-list-table.php:154
 msgid "Delivered answer"
 msgstr ""
 
 #: includes/admin/class-detail-page.php:161
-#: includes/admin/class-detail-page.php:394
+#: includes/admin/class-detail-page.php:444
 msgid "ID"
 msgstr ""
 
@@ -359,176 +360,183 @@ msgid "Outcome"
 msgstr ""
 
 #: includes/admin/class-detail-page.php:172
+msgid "Tools"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:173
 #: includes/admin/class-interactions-list-table.php:149
 #: includes/admin/class-interactions-page.php:438
 msgid "Duration"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:179
+#: includes/admin/class-detail-page.php:180
 #: includes/admin/class-interactions-list-table.php:150
 #: includes/admin/class-interactions-page.php:275
 #: includes/admin/class-interactions-page.php:329
 msgid "Guardrails"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:180
+#: includes/admin/class-detail-page.php:181
 #: includes/admin/class-interactions-list-table.php:335
 msgid "Guardrails were executed"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:181
+#: includes/admin/class-detail-page.php:182
 #: includes/admin/class-interactions-list-table.php:338
 msgid "Guardrails were not executed"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:182
+#: includes/admin/class-detail-page.php:183
 #: includes/admin/class-interactions-list-table.php:151
 #: includes/admin/class-interactions-page.php:337
 msgid "Input verdict"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:183
+#: includes/admin/class-detail-page.php:184
 #: includes/admin/class-interactions-list-table.php:152
 #: includes/admin/class-interactions-page.php:406
 msgid "Output verdict"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:184
+#: includes/admin/class-detail-page.php:185
 #: includes/admin/class-interactions-page.php:276
 #: includes/admin/class-interactions-page.php:409
 msgid "Other plugin reply"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:185
+#: includes/admin/class-detail-page.php:186
 msgid "Recalled sources"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:188
+#: includes/admin/class-detail-page.php:189
 msgid "Best recall score"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:222
-#: includes/admin/class-detail-page.php:313
-#: includes/admin/class-interactions-list-table.php:485
-msgid "(empty)"
-msgstr ""
-
-#: includes/admin/class-detail-page.php:243
-msgid "Comparison of the generated and delivered answers"
-msgstr ""
-
-#. translators: %s: number of characters.
-#: includes/admin/class-detail-page.php:249
-#, php-format
-msgid "The comparison is not available for texts longer than %s characters: the full texts are shown above."
-msgstr ""
-
-#: includes/admin/class-detail-page.php:256
-msgid "The answers differ. Changed lines are highlighted."
-msgstr ""
-
-#: includes/admin/class-detail-page.php:284
-msgid "Tool invocation"
-msgstr ""
-
-#: includes/admin/class-detail-page.php:288
-msgid "Status"
-msgstr ""
-
-#: includes/admin/class-detail-page.php:290
-#: includes/admin/class-interactions-list-table.php:301
-msgid "Tools were invoked"
-msgstr ""
-
-#: includes/admin/class-detail-page.php:291
+#: includes/admin/class-detail-page.php:224
 #: includes/admin/class-interactions-list-table.php:304
 msgid "No tools were invoked"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:293
+#. translators: %d: number of tools invoked.
+#: includes/admin/class-detail-page.php:236
+#, php-format
+msgid "Tool invoked (%d):"
+msgid_plural "Tools invoked (%d):"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-detail-page.php:242
+msgid "Input and output"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:278
+#: includes/admin/class-detail-page.php:363
+#: includes/admin/class-interactions-list-table.php:485
+msgid "(empty)"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:299
+msgid "Comparison of the generated and delivered answers"
+msgstr ""
+
+#. translators: %s: number of characters.
+#: includes/admin/class-detail-page.php:305
+#, php-format
+msgid "The comparison is not available for texts longer than %s characters: the full texts are shown above."
+msgstr ""
+
+#: includes/admin/class-detail-page.php:312
+msgid "The answers differ. Changed lines are highlighted."
+msgstr ""
+
+#: includes/admin/class-detail-page.php:340
+msgid "Tool invocation"
+msgstr ""
+
+#: includes/admin/class-detail-page.php:343
 #: includes/admin/class-interactions-page.php:277
 #: includes/admin/class-interactions-page.php:342
 msgid "Tools used"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:294
+#: includes/admin/class-detail-page.php:344
 msgid "Tool input"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:295
+#: includes/admin/class-detail-page.php:345
 msgid "Tool output"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:337
+#: includes/admin/class-detail-page.php:387
 msgid "Recall sources"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:338
+#: includes/admin/class-detail-page.php:388
 msgid "These are the sources the system recalled; they do not necessarily prove that they were cited or used in the delivered answer."
 msgstr ""
 
-#: includes/admin/class-detail-page.php:415
+#: includes/admin/class-detail-page.php:465
 msgid "Origin"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:416
+#: includes/admin/class-detail-page.php:466
 msgid "WordPress ID"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:417
+#: includes/admin/class-detail-page.php:467
 msgid "Type"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:428
+#: includes/admin/class-detail-page.php:478
 msgid "Score"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:488
+#: includes/admin/class-detail-page.php:538
 #: includes/admin/class-indicator-texts.php:126
 #: includes/admin/class-interactions-list-table.php:283
 #: includes/admin/class-interactions-page.php:398
 msgid "Generated"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:490
+#: includes/admin/class-detail-page.php:540
 #: includes/admin/class-indicator-texts.php:128
 #: includes/admin/class-interactions-list-table.php:285
 #: includes/admin/class-interactions-page.php:399
 msgid "Fast reply"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:492
+#: includes/admin/class-detail-page.php:542
 #: includes/admin/class-indicator-texts.php:130
 #: includes/admin/class-interactions-list-table.php:287
 #: includes/admin/class-interactions-page.php:400
-#: includes/admin/class-trend-page.php:229
-#: includes/admin/class-trend-page.php:283
+#: includes/admin/class-trend-page.php:233
+#: includes/admin/class-trend-page.php:287
 msgid "Incomplete"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:505
+#: includes/admin/class-detail-page.php:555
 msgid "None (no block recorded)"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:519
+#: includes/admin/class-detail-page.php:569
 #: includes/admin/class-interactions-page.php:412
 msgid "Replied"
 msgstr ""
 
-#: includes/admin/class-detail-page.php:519
+#: includes/admin/class-detail-page.php:569
 #: includes/admin/class-interactions-page.php:413
 msgid "Did not reply"
 msgstr ""
 
 #: includes/admin/class-indicator-texts.php:132
-#: includes/admin/class-trend-page.php:241
-#: includes/admin/class-trend-page.php:284
+#: includes/admin/class-trend-page.php:245
+#: includes/admin/class-trend-page.php:288
 msgid "Input blocked"
 msgstr ""
 
 #: includes/admin/class-indicator-texts.php:134
-#: includes/admin/class-trend-page.php:245
-#: includes/admin/class-trend-page.php:285
+#: includes/admin/class-trend-page.php:249
+#: includes/admin/class-trend-page.php:289
 msgid "Output blocked"
 msgstr ""
 
@@ -545,8 +553,8 @@ msgid "Answer changed without an output verdict"
 msgstr ""
 
 #: includes/admin/class-indicator-texts.php:142
-#: includes/admin/class-trend-page.php:267
-#: includes/admin/class-trend-page.php:287
+#: includes/admin/class-trend-page.php:271
+#: includes/admin/class-trend-page.php:291
 msgid "Turns that used tools"
 msgstr ""
 
@@ -680,6 +688,10 @@ msgstr ""
 msgid "(view the details of interaction %d)"
 msgstr ""
 
+#: includes/admin/class-interactions-list-table.php:301
+msgid "Tools were invoked"
+msgstr ""
+
 #: includes/admin/class-interactions-list-table.php:459
 msgid "None"
 msgstr ""
@@ -705,7 +717,7 @@ msgid "Dates and times are shown, and period limits are read, in the site time z
 msgstr ""
 
 #: includes/admin/class-interactions-page.php:273
-#: includes/admin/class-period-fields.php:65
+#: includes/admin/class-period-fields.php:67
 msgid "Period"
 msgstr ""
 
@@ -845,44 +857,52 @@ msgid "The interaction log database cannot be reached. Check the connection sett
 msgstr ""
 
 #: includes/admin/class-period-fields.php:28
-msgid "Today"
+msgid "Last hour"
 msgstr ""
 
 #: includes/admin/class-period-fields.php:29
-msgid "Last week"
+msgid "Last 2 hours"
 msgstr ""
 
 #: includes/admin/class-period-fields.php:30
-msgid "Last month"
+msgid "Today"
 msgstr ""
 
 #: includes/admin/class-period-fields.php:31
-msgid "Last 3 months"
+msgid "Last week"
 msgstr ""
 
 #: includes/admin/class-period-fields.php:32
-msgid "Last 6 months"
+msgid "Last month"
 msgstr ""
 
 #: includes/admin/class-period-fields.php:33
-msgid "Last year"
+msgid "Last 3 months"
 msgstr ""
 
 #: includes/admin/class-period-fields.php:34
+msgid "Last 6 months"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:35
+msgid "Last year"
+msgstr ""
+
+#: includes/admin/class-period-fields.php:36
 msgid "Custom (use the dates below)"
 msgstr ""
 
 #. translators: %s: name of the default period, e.g. "Last week".
-#: includes/admin/class-period-fields.php:48
+#: includes/admin/class-period-fields.php:50
 #, php-format
 msgid "The period was ignored because its value is not valid: the default period (%s) is shown."
 msgstr ""
 
-#: includes/admin/class-period-fields.php:79
+#: includes/admin/class-period-fields.php:81
 msgid "From (custom period)"
 msgstr ""
 
-#: includes/admin/class-period-fields.php:80
+#: includes/admin/class-period-fields.php:82
 msgid "To (custom period)"
 msgstr ""
 
@@ -1030,112 +1050,116 @@ msgstr ""
 msgid "Database account with SELECT-only access to the log table. Required."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:190
+#: includes/admin/class-trend-page.php:111
+msgid "The daily trend is not shown for a period shorter than a day. Choose a longer period, or see the Interactions list for the single turns."
+msgstr ""
+
+#: includes/admin/class-trend-page.php:194
 msgid "The daily figures could not be loaded."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:197
+#: includes/admin/class-trend-page.php:201
 msgid "No turns in the period."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:258
+#: includes/admin/class-trend-page.php:262
 msgid "Without tools"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:275
+#: includes/admin/class-trend-page.php:279
 msgid "A turn blocked on both input and output counts in both series of the third chart."
 msgstr ""
 
-#: includes/admin/class-trend-page.php:289
+#: includes/admin/class-trend-page.php:293
 msgid "% incomplete"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:290
+#: includes/admin/class-trend-page.php:294
 msgid "% input blocked"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:291
+#: includes/admin/class-trend-page.php:295
 msgid "% output blocked"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:293
+#: includes/admin/class-trend-page.php:297
 msgid "% used a tool"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:354
+#: includes/admin/class-trend-page.php:358
 msgid "Turns per week"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:355
+#: includes/admin/class-trend-page.php:359
 msgid "Incomplete turns per week"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:356
+#: includes/admin/class-trend-page.php:360
 msgid "Blocks per week"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:357
+#: includes/admin/class-trend-page.php:361
 msgid "Turns with and without tools per week"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:358
+#: includes/admin/class-trend-page.php:362
 msgid "Week"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:359
+#: includes/admin/class-trend-page.php:363
 msgid "Show the weekly figures as a table"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:362
+#: includes/admin/class-trend-page.php:366
 msgid "Turns per month"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:363
+#: includes/admin/class-trend-page.php:367
 msgid "Incomplete turns per month"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:364
+#: includes/admin/class-trend-page.php:368
 msgid "Blocks per month"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:365
+#: includes/admin/class-trend-page.php:369
 msgid "Turns with and without tools per month"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:366
+#: includes/admin/class-trend-page.php:370
 msgid "Month"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:367
+#: includes/admin/class-trend-page.php:371
 msgid "Show the monthly figures as a table"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:370
+#: includes/admin/class-trend-page.php:374
 msgid "Turns per day"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:371
+#: includes/admin/class-trend-page.php:375
 msgid "Incomplete turns per day"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:372
+#: includes/admin/class-trend-page.php:376
 msgid "Blocks per day"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:373
+#: includes/admin/class-trend-page.php:377
 msgid "Turns with and without tools per day"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:374
+#: includes/admin/class-trend-page.php:378
 msgid "Day"
 msgstr ""
 
-#: includes/admin/class-trend-page.php:375
+#: includes/admin/class-trend-page.php:379
 msgid "Show the daily figures as a table"
 msgstr ""
 
 #. translators: %s: number of weeks.
-#: includes/admin/class-trend-page.php:395
+#: includes/admin/class-trend-page.php:399
 #, php-format
 msgid "%s week"
 msgid_plural "%s weeks"
@@ -1143,7 +1167,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: number of months.
-#: includes/admin/class-trend-page.php:400
+#: includes/admin/class-trend-page.php:404
 #, php-format
 msgid "%s month"
 msgid_plural "%s months"
@@ -1151,7 +1175,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: number of days.
-#: includes/admin/class-trend-page.php:405
+#: includes/admin/class-trend-page.php:409
 #, php-format
 msgid "%s day"
 msgid_plural "%s days"

@@ -169,6 +169,7 @@ class Detail_Page {
 			__( 'User', 'rag-interaction-logger-monitor' ) => $interaction->user_id,
 			__( 'Turn ID', 'rag-interaction-logger-monitor' ) => $this->or_not_recorded( $interaction->turn_id ),
 			__( 'Outcome', 'rag-interaction-logger-monitor' ) => $this->outcome_label( $interaction->outcome ),
+			__( 'Tools', 'rag-interaction-logger-monitor' ) => $this->tools_summary( $interaction ),
 			__( 'Duration', 'rag-interaction-logger-monitor' ) => null === $interaction->duration_ms
 				? __( 'Not recorded', 'rag-interaction-logger-monitor' )
 				: sprintf(
@@ -179,8 +180,8 @@ class Detail_Page {
 			__( 'Guardrails', 'rag-interaction-logger-monitor' ) => $interaction->guard_present
 				? __( 'Guardrails were executed', 'rag-interaction-logger-monitor' )
 				: __( 'Guardrails were not executed', 'rag-interaction-logger-monitor' ),
-			__( 'Input verdict', 'rag-interaction-logger-monitor' ) => $this->verdict_label( $interaction->input_verdict ),
-			__( 'Output verdict', 'rag-interaction-logger-monitor' ) => $this->verdict_label( $interaction->output_verdict ),
+			__( 'Input verdict', 'rag-interaction-logger-monitor' ) => $this->verdict_html( $interaction->input_verdict ),
+			__( 'Output verdict', 'rag-interaction-logger-monitor' ) => $this->verdict_html( $interaction->output_verdict ),
 			__( 'Other plugin reply', 'rag-interaction-logger-monitor' ) => $this->reply_label( $interaction->other_plugin_reply ),
 			__( 'Recalled sources', 'rag-interaction-logger-monitor' ) => null === $interaction->recall_count
 				? __( 'Not recorded', 'rag-interaction-logger-monitor' )
@@ -193,14 +194,69 @@ class Detail_Page {
 		echo '<table class="widefat striped rilm-detail-table"><tbody>';
 
 		foreach ( $rows as $label => $value ) {
+			// A value built by a *_html() helper arrives already escaped, as an object.
 			printf(
 				'<tr><th scope="row">%1$s</th><td>%2$s</td></tr>',
 				esc_html( (string) $label ),
-				esc_html( (string) $value )
+				$value instanceof Escaped_Html ? $value->html : esc_html( (string) $value ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped_Html is only created by this class from escaped parts.
 			);
 		}
 
 		echo '</tbody></table>';
+	}
+
+	/**
+	 * Summarises the tool invocation for the metadata table: a status and each tool name in bold.
+	 *
+	 * NULL stays "Not recorded", which is not the same as "no tools were invoked".
+	 *
+	 * @param Interaction $interaction Interaction to show.
+	 * @return Escaped_Html|string Escaped markup, or plain text to be escaped by the caller.
+	 */
+	private function tools_summary( Interaction $interaction ) {
+		if ( null === $interaction->tools_used ) {
+			return __( 'Not recorded', 'rag-interaction-logger-monitor' );
+		}
+
+		$names = array_filter( array_map( 'trim', explode( ',', $interaction->tools_used ) ), 'strlen' );
+
+		if ( array() === $names ) {
+			return __( 'No tools were invoked', 'rag-interaction-logger-monitor' );
+		}
+
+		$items = '';
+
+		foreach ( $names as $name ) {
+			$items .= '<strong>' . esc_html( $name ) . '</strong>, ';
+		}
+
+		$html = esc_html(
+			sprintf(
+				/* translators: %d: number of tools invoked. */
+				_n( 'Tool invoked (%d):', 'Tools invoked (%d):', count( $names ), 'rag-interaction-logger-monitor' ),
+				count( $names )
+			)
+		) . ' ' . substr( $items, 0, -2 );
+
+		if ( null !== $interaction->tool_input || null !== $interaction->tool_output ) {
+			$html .= ' &middot; <a href="#rilm-tool-invocation">' . esc_html__( 'Input and output', 'rag-interaction-logger-monitor' ) . '</a>';
+		}
+
+		return new Escaped_Html( $html );
+	}
+
+	/**
+	 * Shows a Guardrails verdict in bold when one was recorded.
+	 *
+	 * @param string|null $verdict Verdict.
+	 * @return Escaped_Html|string Escaped markup, or plain text to be escaped by the caller.
+	 */
+	private function verdict_html( ?string $verdict ) {
+		if ( null === $verdict ) {
+			return $this->verdict_label( $verdict );
+		}
+
+		return new Escaped_Html( '<strong>' . esc_html( $verdict ) . '</strong>' );
 	}
 
 	/**
@@ -281,15 +337,9 @@ class Detail_Page {
 			return;
 		}
 
-		printf( '<h2>%s</h2>', esc_html__( 'Tool invocation', 'rag-interaction-logger-monitor' ) );
+		printf( '<h2 id="rilm-tool-invocation">%s</h2>', esc_html__( 'Tool invocation', 'rag-interaction-logger-monitor' ) );
 		echo '<table class="widefat striped rilm-detail-table"><tbody>';
 
-		$this->render_tool_row(
-			__( 'Status', 'rag-interaction-logger-monitor' ),
-			null !== $interaction->tools_used && '' !== trim( $interaction->tools_used )
-				? __( 'Tools were invoked', 'rag-interaction-logger-monitor' )
-				: __( 'No tools were invoked', 'rag-interaction-logger-monitor' )
-		);
 		$this->render_tool_row( __( 'Tools used', 'rag-interaction-logger-monitor' ), $interaction->tools_used );
 		$this->render_tool_row( __( 'Tool input', 'rag-interaction-logger-monitor' ), $interaction->tool_input );
 		$this->render_tool_row( __( 'Tool output', 'rag-interaction-logger-monitor' ), $interaction->tool_output );

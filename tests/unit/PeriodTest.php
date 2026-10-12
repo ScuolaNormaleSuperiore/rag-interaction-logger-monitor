@@ -59,6 +59,10 @@ class PeriodTest extends TestCase {
 			'today in winter time'          => array( '2026-12-15 10:00:00', Period::TODAY, '2026-12-14 23:00:00.000', '2026-12-15 09:00:00.000' ),
 			'today when summer time ends'   => array( '2026-10-25 14:00:00', Period::TODAY, '2026-10-24 22:00:00.000', '2026-10-25 13:00:00.000' ),
 			'today when summer time starts' => array( '2026-03-29 14:00:00', Period::TODAY, '2026-03-28 23:00:00.000', '2026-03-29 12:00:00.000' ),
+			'last hour'                     => array( '2026-10-02 14:30:00', Period::LAST_HOUR, '2026-10-02 11:30:00.000', '2026-10-02 12:30:00.000' ),
+			'last 2 hours'                  => array( '2026-10-02 14:30:00', Period::LAST_2_HOURS, '2026-10-02 10:30:00.000', '2026-10-02 12:30:00.000' ),
+			'last 2 hours across midnight'  => array( '2026-10-02 00:30:00', Period::LAST_2_HOURS, '2026-10-01 20:30:00.000', '2026-10-01 22:30:00.000' ),
+			'last 2 hours when summer time ends' => array( '2026-10-25 03:30:00', Period::LAST_2_HOURS, '2026-10-25 00:30:00.000', '2026-10-25 02:30:00.000' ),
 			'last week'                     => array( '2026-10-02 14:30:00', Period::WEEK, '2026-09-25 12:30:00.000', '2026-10-02 12:30:00.000' ),
 			'last month'                    => array( '2026-10-02 14:30:00', Period::MONTH, '2026-09-02 12:30:00.000', '2026-10-02 12:30:00.000' ),
 			'last month across clock change' => array( '2026-11-02 12:00:00', Period::MONTH, '2026-10-02 10:00:00.000', '2026-11-02 11:00:00.000' ),
@@ -89,6 +93,22 @@ class PeriodTest extends TestCase {
 		foreach ( Period::PRESETS as $key ) {
 			$this->assertNotNull( Period::preset( $key, self::rome( '2026-10-02 14:30:00' ) ), $key );
 		}
+	}
+
+	/**
+	 * Only the hour-based presets are shorter than a day.
+	 *
+	 * @return void
+	 */
+	public function test_only_hour_presets_are_sub_day(): void {
+		$now = self::rome( '2026-10-02 14:30:00' );
+
+		foreach ( Period::PRESETS as $key ) {
+			$expected = in_array( $key, array( Period::LAST_HOUR, Period::LAST_2_HOURS ), true );
+			$this->assertSame( $expected, Period::preset( $key, $now )->is_sub_day(), $key );
+		}
+
+		$this->assertFalse( Period::custom( $now, $now )->is_sub_day() );
 	}
 
 	/**

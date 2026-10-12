@@ -326,7 +326,7 @@ class InteractionsPageTest extends WP_UnitTestCase {
 	public function test_period_select_offers_every_period(): void {
 		$output = $this->render( $this->page() );
 
-		foreach ( array( 'today', 'week', 'month', '3months', '6months', 'year', 'custom' ) as $value ) {
+		foreach ( array( 'hour', '2hours', 'today', 'week', 'month', '3months', '6months', 'year', 'custom' ) as $value ) {
 			$this->assertStringContainsString( '<option value="' . $value . '"', $output, $value );
 		}
 	}

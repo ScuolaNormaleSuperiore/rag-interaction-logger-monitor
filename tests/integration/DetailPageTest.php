@@ -164,8 +164,8 @@ class DetailPageTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '<th scope="row">Outcome</th><td>Generated</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Duration</th><td>1,500 ms</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Guardrails</th><td>Guardrails were executed</td>', $output );
-		$this->assertStringContainsString( '<th scope="row">Input verdict</th><td>blocked</td>', $output );
-		$this->assertStringContainsString( '<th scope="row">Output verdict</th><td>toxic</td>', $output );
+		$this->assertStringContainsString( '<th scope="row">Input verdict</th><td><strong>blocked</strong></td>', $output );
+		$this->assertStringContainsString( '<th scope="row">Output verdict</th><td><strong>toxic</strong></td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Other plugin reply</th><td>Replied</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Recalled sources</th><td>2</td>', $output );
 		$this->assertStringContainsString( '<th scope="row">Best recall score</th><td>0.5000</td>', $output );
@@ -578,8 +578,9 @@ class DetailPageTest extends WP_UnitTestCase {
 
 		$output = $this->render( $this->page( true, array( 'tools_used', 'tool_input', 'tool_output', 'recall_sources' ) ) );
 
-		$this->assertStringContainsString( '<h2>Tool invocation</h2>', $output );
-		$this->assertStringContainsString( '>Tools were invoked<', $output );
+		$this->assertStringContainsString( '<h2 id="rilm-tool-invocation">Tool invocation</h2>', $output );
+		$this->assertStringContainsString( 'Tool invoked (1): <strong>web_search</strong>', $output );
+		$this->assertStringContainsString( 'href="#rilm-tool-invocation"', $output );
 		$this->assertStringContainsString( '>Tools used<', $output );
 		$this->assertStringContainsString( '>Tool input<', $output );
 		$this->assertStringContainsString( '>Tool output<', $output );
@@ -587,6 +588,45 @@ class DetailPageTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( '>Not recorded<', $output );
 		$this->assertStringContainsString( '{&quot;q&quot;:&quot;&lt;b&gt;x&lt;/b&gt;&quot;}', $output );
 		$this->assertStringNotContainsString( '<b>x</b>', $output );
+	}
+
+	/**
+	 * The metadata table names every tool and every recorded verdict in bold, escaped.
+	 *
+	 * @return void
+	 */
+	public function test_tool_names_and_verdicts_are_bold_and_escaped(): void {
+		$this->reader->rows = array(
+			array(
+				$this->row(
+					array(
+						'tools_used'     => 'web_search, <i>calc</i>',
+						'input_verdict'  => 'prompt_injection',
+						'output_verdict' => null,
+					)
+				),
+			),
+		);
+
+		$output = $this->render( $this->page( true, array( 'tools_used' ) ) );
+
+		$this->assertStringContainsString( 'Tools invoked (2): <strong>web_search</strong>, <strong>&lt;i&gt;calc&lt;/i&gt;</strong>', $output );
+		$this->assertStringContainsString( '<strong>prompt_injection</strong>', $output );
+		$this->assertStringContainsString( 'None (no block recorded)', $output );
+		$this->assertStringNotContainsString( '<i>calc', $output );
+	}
+
+	/**
+	 * An empty tool list says no tool ran; a NULL one says "Not recorded".
+	 *
+	 * @return void
+	 */
+	public function test_tools_row_distinguishes_none_from_not_recorded(): void {
+		$this->reader->rows = array( array( $this->row( array( 'tools_used' => '' ) ) ) );
+		$this->assertStringContainsString( '<td>No tools were invoked</td>', $this->render( $this->page( true, array( 'tools_used' ) ) ) );
+
+		$this->reader->rows = array( array( $this->row( array( 'tools_used' => null, 'tool_input' => 'x' ) ) ) );
+		$this->assertStringContainsString( '<th scope="row">Tools</th><td>Not recorded</td>', $this->render( $this->page( true, array( 'tools_used', 'tool_input' ) ) ) );
 	}
 
 	/**

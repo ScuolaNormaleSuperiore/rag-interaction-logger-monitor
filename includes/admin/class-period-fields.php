@@ -25,6 +25,8 @@ class Period_Fields {
 	 */
 	public static function options(): array {
 		return array(
+			Period::LAST_HOUR    => __( 'Last hour', 'rag-interaction-logger-monitor' ),
+			Period::LAST_2_HOURS => __( 'Last 2 hours', 'rag-interaction-logger-monitor' ),
 			Period::TODAY        => __( 'Today', 'rag-interaction-logger-monitor' ),
 			Period::WEEK         => __( 'Last week', 'rag-interaction-logger-monitor' ),
 			Period::MONTH        => __( 'Last month', 'rag-interaction-logger-monitor' ),

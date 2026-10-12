@@ -24,6 +24,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Period {
 
 	/**
+	 * Last hour up to now.
+	 */
+	public const LAST_HOUR = 'hour';
+
+	/**
+	 * Last 2 hours up to now.
+	 */
+	public const LAST_2_HOURS = '2hours';
+
+	/**
 	 * From local midnight to now.
 	 */
 	public const TODAY = 'today';
@@ -61,7 +71,7 @@ class Period {
 	/**
 	 * Preset keys, in display order.
 	 */
-	public const PRESETS = array( self::TODAY, self::WEEK, self::MONTH, self::THREE_MONTHS, self::SIX_MONTHS, self::YEAR );
+	public const PRESETS = array( self::LAST_HOUR, self::LAST_2_HOURS, self::TODAY, self::WEEK, self::MONTH, self::THREE_MONTHS, self::SIX_MONTHS, self::YEAR );
 
 	/**
 	 * Preset used when no period is chosen, or when the chosen one is not valid.
@@ -90,9 +100,11 @@ class Period {
 	}
 
 	/**
-	 * Length of each moving preset, in days or in months.
+	 * Length of each moving preset, in hours, days or months.
 	 */
 	private const START_OFFSETS = array(
+		self::LAST_HOUR    => array( 'hours', 1 ),
+		self::LAST_2_HOURS => array( 'hours', 2 ),
 		self::WEEK         => array( 'days', 7 ),
 		self::MONTH        => array( 'months', 1 ),
 		self::THREE_MONTHS => array( 'months', 3 ),
@@ -157,11 +169,25 @@ class Period {
 
 		list( $unit, $amount ) = self::START_OFFSETS[ $key ];
 
-		$start = 'days' === $unit
-			? $now->modify( '-' . $amount . ' days' )
-			: self::minus_months( $now, $amount );
+		if ( 'months' === $unit ) {
+			$start = self::minus_months( $now, $amount );
+		} elseif ( 'hours' === $unit ) {
+			// Elapsed hours, not wall-clock ones: a daylight-saving change must not stretch or shrink the window.
+			$start = $now->setTimezone( new DateTimeZone( 'UTC' ) )->modify( '-' . $amount . ' hours' )->setTimezone( $now->getTimezone() );
+		} else {
+			$start = $now->modify( '-' . $amount . ' days' );
+		}
 
 		return new self( $key, $start, $now );
+	}
+
+	/**
+	 * Tells whether the period is shorter than a day, so a day-by-day chart has nothing to show.
+	 *
+	 * @return bool
+	 */
+	public function is_sub_day(): bool {
+		return self::LAST_HOUR === $this->key || self::LAST_2_HOURS === $this->key;
 	}
 
 	/**

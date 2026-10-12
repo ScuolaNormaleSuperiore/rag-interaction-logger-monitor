@@ -392,6 +392,24 @@ class TrendPageTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A period shorter than a day shows a message, not charts, and does not query the series.
+	 *
+	 * @return void
+	 */
+	public function test_sub_day_period_shows_a_message_instead_of_charts(): void {
+		foreach ( array( 'hour', '2hours' ) as $preset ) {
+			$_GET = array( 'period' => $preset );
+
+			$this->load();
+
+			$output = $this->render( $this->page() );
+
+			$this->assertStringContainsString( 'The daily trend is not shown for a period shorter than a day.', $output, $preset );
+			$this->assertStringNotContainsString( 'rilm-chart-turns', $output, $preset );
+		}
+	}
+
+	/**
 	 * A row with no turns shows a dash for its percentages, instead of dividing by zero.
 	 *
 	 * @return void

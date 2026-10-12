@@ -106,7 +106,11 @@ class Trend_Page {
 
 			$repository = call_user_func( $this->repository_factory );
 
-			if ( null === $repository ) {
+			if ( $filters->period()->is_sub_day() ) {
+				?>
+				<p><?php esc_html_e( 'The daily trend is not shown for a period shorter than a day. Choose a longer period, or see the Interactions list for the single turns.', 'rag-interaction-logger-monitor' ); ?></p>
+				<?php
+			} elseif ( null === $repository ) {
 				?>
 				<p><?php esc_html_e( 'The interaction log is not available. See the notice above.', 'rag-interaction-logger-monitor' ); ?></p>
 				<?php
