@@ -43,6 +43,9 @@ Each value comes from, in order of precedence, a constant in `wp-config.php`, th
 
 ```php
 define( 'ICT_RAG_MONITOR_DB_HOST', 'db.example.org' );
+define( 'ICT_RAG_MONITOR_DB_PORT', 3306 ); // Optional; 3306 is the default.
+define( 'ICT_RAG_MONITOR_DB_NAME', 'rag-interaction-logger-db' ); // Optional.
+define( 'ICT_RAG_MONITOR_DB_TABLE', 'ril_interactions' ); // Optional.
 define( 'ICT_RAG_MONITOR_DB_USER', 'rilm_reader' );
 define( 'ICT_RAG_MONITOR_DB_PASSWORD', '<password>' );
 ```
