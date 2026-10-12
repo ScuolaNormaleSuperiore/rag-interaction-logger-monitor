@@ -4,7 +4,7 @@ Tags: rag, logs, monitoring, chatbot, admin
 Requires at least: 7.1
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -89,6 +89,11 @@ A turn that used several tools or forms is counted once in each of them.
 The plugin shows, to administrators only, what the logger recorded: questions, answers, user identifiers and tool data. These are personal data of your visitors; decide who may be an administrator and for how long the logger keeps them. The plugin stores no interaction data in your WordPress database, sets no cookies and contacts no external service other than the log database you configure. It stores only the connection settings (and, if you choose, the encrypted password) in two options, which are removed when the plugin is deleted.
 
 == Changelog ==
+= 1.0.3 =
+* Added the "Last hour" and "Last 2 hours" periods, to look into something that just happened. The Daily trend shows a message instead of charts for them.
+* The interaction detail now shows, in the top table, which tools were invoked and the Guardrails verdicts, in bold, with a link to the tool input and output.
+* Italian translation of the new texts.
+
 = 1.0.2 =
 * Added a Daily trend page, split out of the Dashboard, with charts that adapt to day, week or month depending on the period.
 * Added a "Test status" box to the Dashboard.
@@ -106,6 +111,9 @@ The plugin shows, to administrators only, what the logger recorded: questions, a
 * First version: Dashboard with indicator legend, Daily trend, Interactions list with filters and search, Interaction detail, Anomalies, tools and forms filters and figures, Settings with encrypted password, Italian translation.
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+New "Last hour" and "Last 2 hours" periods, and tools and Guardrails verdicts highlighted in the interaction detail.
 
 = 1.0.2 =
 New Daily trend page, Dashboard test-status box, richer recalled sources, and clearer Guardrails/Tool wording.
